@@ -10,6 +10,7 @@ $tempRoot = Join-Path $projectRoot 'work\tmp'
 New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
 $env:TEMP = $tempRoot
 $env:TMP = $tempRoot
+$env:PYTHONUTF8 = '1'
 $env:PIP_CACHE_DIR = Join-Path $projectRoot 'work\pip-cache'
 if (-not (Test-Path -LiteralPath $pythonExe)) {
     python -m venv --without-pip $venvRoot

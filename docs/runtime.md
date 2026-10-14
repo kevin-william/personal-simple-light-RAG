@@ -22,6 +22,8 @@ As DLLs de runtime do PyTorch são registradas somente no processo Windows;
 nenhum PATH de usuário/sistema ou arquivo de plugin é alterado. Os tokens
 oficiais do Phi são validados antes de inferir. Offload é observado pelo log
 nativo; o parâmetro solicitado não é tratado como prova de aceleração.
+O launcher usa UTF-8 no processo Python e o script tem BOM para PowerShell 5;
+consumidores da saída da CLI em subprocessos devem decodificar como UTF-8.
 
 `LLM_BATCH_SIZE=128` limita memória temporária. O modo alternado libera um
 modelo antes do outro; o residente pode liberar o outro modelo se o tamanho

@@ -18,7 +18,7 @@ def test_invalid(kwargs):
 
 
 def test_status_is_lazy(tmp_path):
-    result = subprocess.run([sys.executable, str(ROOT / 'main.py'), '--status'], cwd=tmp_path, capture_output=True, text=True)
+    result = subprocess.run([sys.executable, str(ROOT / 'main.py'), '--status'], cwd=tmp_path, capture_output=True, text=True,encoding='utf-8')
     assert result.returncode == 0
     assert str(ROOT).replace('\\', '\\\\') in result.stdout
     code = 'from src.cli import main; main(["--status"]); import sys; assert "torch" not in sys.modules'
