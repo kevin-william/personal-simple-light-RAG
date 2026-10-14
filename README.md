@@ -56,3 +56,8 @@ Similaridade `1 - distância` não é probabilidade ou confiança da resposta.
 Mudanças de revisão/divisão/processamento exigem uma nova base ou reset.
 O catálogo SQLite separa identidade de origem e conteúdo compartilhado e
 registra versões pending/active/failed e uma geração para invalidar memória.
+
+Importação usa hash de conteúdo e IDs determinísticos. Reimportar conteúdo
+inalterado não recalcula embeddings; arquivos idênticos compartilham vetores
+e mantêm aliases de origem. Apenas versões completas/ativas entram na busca.
+Há suporte a um escritor local por vez; execução multiprocesso é fora de escopo.
