@@ -14,23 +14,23 @@ Na inspeção, a pasta continha apenas o plano. Não havia Git, AGENTS.md, READM
 
 | Ordem | Tarefa | Dependências | Commit único | Status |
 |---|---|---|---|---|
-| 1 | [T01 — Configuração validada e entrada executável](t01-configuracao.md) | — | `feat(config): add validated settings and application entry point` | Não iniciada — 0% |
-| 2 | [T02 — Preparação reproduzível CUDA e CPU com diagnóstico](t02-instalacao-perfis.md) | T01 | `feat(setup): add CUDA and CPU installation profiles` | Não iniciada — 0% |
-| 3 | [T03 — Downloads verificáveis, cache e preparação offline](t03-download-modelos.md) | T01, T02 | `feat(models): add verified model downloads and offline cache` | Não iniciada — 0% |
-| 4 | [T04 — Extração e divisão com rastreabilidade de fontes](t04-extracao-chunks.md) | T01, T02 | `feat(ingestion): add document extraction and bounded chunks` | Não iniciada — 0% |
-| 5 | [T05 — BGE-M3 normalizado para documentos e perguntas](t05-embeddings.md) | T02, T03, T04 | `feat(embeddings): add consistent normalized BGE-M3 encoding` | Não iniciada — 0% |
-| 6 | [T06 — Índice persistente com busca por cosseno](t06-chroma-cosseno.md) | T01, T05 | `feat(search): add persistent cosine vector store` | Não iniciada — 0% |
-| 7 | [T07 — Catálogo transacional de origens, conteúdo e versões](t07-catalogo.md) | T01 | `feat(catalog): add source identities and version lifecycle` | Não iniciada — 0% |
-| 8 | [T08 — Importação inicial e reimportação idempotente](t08-ingestao-idempotente.md) | T04, T05, T06, T07 | `feat(ingestion): add idempotent document imports and aliases` | Não iniciada — 0% |
-| 9 | [T09 — Atualização segura e recuperação de ingestão](t09-atualizacao-recuperacao.md) | T08 | `feat(ingestion): add safe version updates and crash recovery` | Não iniciada — 0% |
-| 10 | [T10 — Exclusão por identidade e reset recuperável](t10-exclusao.md) | T09 | `feat(documents): add identity-based deletion and index reset` | Não iniciada — 0% |
-| 11 | [T11 — Inferência Phi com template oficial e política de memória](t11-runtime-phi.md) | T02, T03, T05 | `feat(llm): add Phi inference and model memory lifecycle` | Não iniciada — 0% |
-| 12 | [T12 — Última mensagem e resumo incremental pela LLM](t12-memoria-enxuta.md) | T10, T11 | `feat(memory): add compact LLM-generated conversation state` | Não iniciada — 0% |
-| 13 | [T13 — Perguntas independentes e contexto mínimo pela LLM](t13-resolucao-contextual.md) | T12 | `feat(context): add LLM-based follow-up resolution` | Não iniciada — 0% |
-| 14 | [T14 — Resposta RAG com orçamento de tokens e citações](t14-pipeline-rag.md) | T06, T09, T10, T11, T13 | `feat(rag): add grounded response pipeline with token budgets` | Não iniciada — 0% |
-| 15 | [T15 — Menu e interface de gerenciamento de documentos](t15-ui-documentos.md) | T02, T03, T09, T10 | `feat(cli): add document management menu and diagnostics` | Não iniciada — 0% |
-| 16 | [T16 — Chat interativo com streaming, memória e fontes](t16-ui-chat.md) | T14, T15 | `feat(chat): add interactive streaming RAG conversation` | Não iniciada — 0% |
-| 17 | [T17 — Métricas por etapa e avaliação reproduzível](t17-metricas-avaliacao.md) | T16 | `feat(metrics): add RAG timing instrumentation and benchmark runner` | Não iniciada — 0% |
+| 1 | [T01 — Configuração validada e entrada executável](t01-configuracao.md) | — | `feat(config): add validated settings and application entry point` | Código entregue; validação local aprovada |
+| 2 | [T02 — Preparação reproduzível CUDA e CPU com diagnóstico](t02-instalacao-perfis.md) | T01 | `feat(setup): add CUDA and CPU installation profiles` | Código entregue; validação local aprovada |
+| 3 | [T03 — Downloads verificáveis, cache e preparação offline](t03-download-modelos.md) | T01, T02 | `feat(models): add verified model downloads and offline cache` | Código entregue; validação local aprovada |
+| 4 | [T04 — Extração e divisão com rastreabilidade de fontes](t04-extracao-chunks.md) | T01, T02 | `feat(ingestion): add document extraction and bounded chunks` | Código entregue; validação local aprovada |
+| 5 | [T05 — BGE-M3 normalizado para documentos e perguntas](t05-embeddings.md) | T02, T03, T04 | `feat(embeddings): add consistent normalized BGE-M3 encoding` | Código entregue; validação local aprovada |
+| 6 | [T06 — Índice persistente com busca por cosseno](t06-chroma-cosseno.md) | T01, T05 | `feat(search): add persistent cosine vector store` | Código entregue; validação local aprovada |
+| 7 | [T07 — Catálogo transacional de origens, conteúdo e versões](t07-catalogo.md) | T01 | `feat(catalog): add source identities and version lifecycle` | Código entregue; validação local aprovada |
+| 8 | [T08 — Importação inicial e reimportação idempotente](t08-ingestao-idempotente.md) | T04, T05, T06, T07 | `feat(ingestion): add idempotent document imports and aliases` | Código entregue; validação local aprovada |
+| 9 | [T09 — Atualização segura e recuperação de ingestão](t09-atualizacao-recuperacao.md) | T08 | `feat(ingestion): add safe version updates and crash recovery` | Código entregue; validação local aprovada |
+| 10 | [T10 — Exclusão por identidade e reset recuperável](t10-exclusao.md) | T09 | `feat(documents): add identity-based deletion and index reset` | Código entregue; validação local aprovada |
+| 11 | [T11 — Inferência Phi com template oficial e política de memória](t11-runtime-phi.md) | T02, T03, T05 | `feat(llm): add Phi inference and model memory lifecycle` | Código entregue; validação local aprovada |
+| 12 | [T12 — Última mensagem e resumo incremental pela LLM](t12-memoria-enxuta.md) | T10, T11 | `feat(memory): add compact LLM-generated conversation state` | Código entregue; validação local aprovada |
+| 13 | [T13 — Perguntas independentes e contexto mínimo pela LLM](t13-resolucao-contextual.md) | T12 | `feat(context): add LLM-based follow-up resolution` | Código entregue; validação local aprovada |
+| 14 | [T14 — Resposta RAG com orçamento de tokens e citações](t14-pipeline-rag.md) | T06, T09, T10, T11, T13 | `feat(rag): add grounded response pipeline with token budgets` | Código entregue; validação local aprovada |
+| 15 | [T15 — Menu e interface de gerenciamento de documentos](t15-ui-documentos.md) | T02, T03, T09, T10 | `feat(cli): add document management menu and diagnostics` | Código entregue; validação local aprovada |
+| 16 | [T16 — Chat interativo com streaming, memória e fontes](t16-ui-chat.md) | T14, T15 | `feat(chat): add interactive streaming RAG conversation` | Código entregue; validação local aprovada |
+| 17 | [T17 — Métricas por etapa e avaliação reproduzível](t17-metricas-avaliacao.md) | T16 | `feat(metrics): add RAG timing instrumentation and benchmark runner` | Código entregue; validação local aprovada |
 
 ## Cadeia de dependências
 
@@ -100,11 +100,15 @@ Links relativos, dependências, 17 arquivos de tarefa, mensagens únicas, ordem 
 
 ## Progresso agregado
 
-- **Tarefas:** 17.
-- **Não iniciadas:** 17.
-- **Em andamento / concluídas:** 0 / 0.
-- **Progresso da implementação:** 0%.
-- **Critérios de aceitação:** 0/136 (8 por tarefa).
-- **Decomposição:** concluída; resultados de validação registrados em [decomposition_validation.json](../decomposition_validation.json).
-- **Testes de produção:** não executados; somente documentação e verificador da skill foram adicionados.
-- **Git:** ausente na inspeção; não há staging, commits ou paths ignorados a verificar neste estado.
+- **Tarefas com código entregue:** 17/17 — 100%.
+- **Critérios registrados:** 134/136; T02/T17 preservam um critério externo pendente.
+- **Validação local:** 57 testes automatizados; modelos reais CPU/CUDA; benchmarks no README.
+- **Gates externos:** Windows limpo, outros hardwares/corpus e requisitos mínimos certificados, conforme [relatório](../docs/validation.md).
+- **Commits:** um por tarefa, mais baseline de documentação e correções de validação real.
+- **Git:** repositório local inicializado; nada publicado ou enviado a remoto.
+- **Decomposição:** relatório original [decomposition_validation.json](../decomposition_validation.json) descreve a etapa anterior, não o estado da implementação.
+
+Os caminhos antes propostos agora existem no repositório. A validação atual
+está em [docs/validation.md](../docs/validation.md). Ignorados intencionalmente:
+`models/`, `data/`, `work/`, `.venv*`, `.env` e caches. Documentação de tarefas,
+testes, código e relatórios observados são versionados.

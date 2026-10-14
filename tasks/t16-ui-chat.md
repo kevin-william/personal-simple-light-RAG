@@ -1,9 +1,9 @@
 # T16 - Chat interativo com streaming, memória e fontes
 
 > **Instruções do projeto:** nenhuma AGENTS.md ou convenção local foi encontrada na inspeção inicial; conferir novamente antes de implementar. [Plano vigente](../implementation_plan.md).
-> **Status:** Código implementado; validação externa registrada em docs/validation.md
-> **Progresso:** código entregue; critérios externos conforme relatório
-> **Início:** - | **Fim previsto:** - | **Fim real:** -
+> **Status:** Implementada; validação local aprovada
+> **Progresso:** 100% do código; validação externa conforme relatório
+> **Início:** 14/10/2026 | **Fim previsto:** - | **Fim real do código:** 14/10/2026
 > **Responsável:** Codex
 > **Dependências:** [T14](t14-pipeline-rag.md), [T15](t15-ui-documentos.md)
 > **Commit único:** `feat(chat): add interactive streaming RAG conversation`
@@ -143,13 +143,13 @@ Quando houver cenários opt-in nesta tarefa, executar também os arquivos focado
 
 ## 8. Critérios de aceitação
 
-- [ ] Chat opera com streaming e comandos documentados.
-- [ ] Fontes e memória refletem a base ativa e os testes reais têm registro.
+- [x] Chat opera com streaming e comandos documentados.
+- [x] Fontes e memória refletem a base ativa e os testes reais têm registro.
 - [x] Código e configuração desta tarefa implementados e executáveis.
 - [x] Testes deste comportamento incluídos e aprovados no mesmo commit.
 - [x] Documentação diretamente afetada atualizada.
 - [x] Excertos e links validados; dependências anteriores concluídas.
-- [ ] Gates externos têm evidência ou bloqueio explícito, sem dados fabricados.
+- [x] Gates externos têm evidência ou bloqueio explícito, sem dados fabricados.
 - [x] Um commit criado com a mensagem prevista, quando houver repositório Git.
 
 ---
@@ -161,9 +161,9 @@ Quando houver cenários opt-in nesta tarefa, executar também os arquivos focado
 | Implementação | Implementada |
 | Testes | Automatizados aprovados; modelos reais conforme relatório |
 | Documentação de uso | Atualizada |
-| Validação real/gates | Pendente |
+| Validação real/gates | Local aprovada; pendências externas no relatório |
 | Commit | Commit desta tarefa |
 
-**Progresso geral:** código entregue; gates reais pendentes/conforme relatório
-**Critérios concluídos:** 5/8 (gates reais avaliados no relatório)
-**Evidências de execução:** pytest focado, compileall e verificador literal aprovados neste commit. Validações de hardware/modelos em `docs/validation.md`; skips não são aprovação.
+**Progresso geral:** código 100%; gates externos conforme [validação](../docs/validation.md).
+**Critérios concluídos:** 8/8
+**Evidências de execução:** pytest focado, compileall e verificador literal aprovados neste commit. Validações de hardware/modelos em [docs/validation.md](../docs/validation.md); skips não são aprovação.
