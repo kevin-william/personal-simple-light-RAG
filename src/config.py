@@ -14,9 +14,9 @@ class Settings(BaseSettings):
     root: Path = ROOT
     model_repo_id: str = 'unsloth/Phi-4-mini-instruct-GGUF'
     model_filename: str = 'Phi-4-mini-instruct.Q8_0.gguf'
-    model_revision: str = ''
+    model_revision: str = '78eb92a46fc37e6b524df991ed9aca9bc6aa7b80'
     embedding_model_name: str = 'BAAI/bge-m3'
-    embedding_model_revision: str = ''
+    embedding_model_revision: str = '5617a9f61b028005a4858fdac845db406aefb181'
     models_dir: Path = Path('models')
     chroma_persist_dir: Path = Path('data/chroma')
     collection_name: str = 'documents'

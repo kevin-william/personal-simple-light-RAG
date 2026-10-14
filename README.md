@@ -33,3 +33,12 @@ deve suportar CUDA 12.4; o diagnóstico testa os backends separadamente.
 Não há fallback para compilar C++. Instalação não altera Python global.
 `-SkipModels` instala sem baixar pesos. `--diagnose` verifica backends sem pesos.
 O comando de preparação de modelos será acrescentado na próxima tarefa.
+
+## Modelos
+
+`python main.py --prepare` baixa as revisões imutáveis configuradas de ambos
+os modelos, valida tamanho e SHA256 (incluindo SHA remoto quando fornecido)
+e publica manifestos somente após sucesso. `--prepare --offline` verifica
+cache sem rede. Carregamento também verifica integridade. Pesos ficam em
+`models/llm` e `models/embeddings`; downloads interrompidos podem ser repetidos.
+Os dois repositórios publicam licença MIT. Use `--status` para ver as revisões.
