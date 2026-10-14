@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 from .config import load_settings
 
 
@@ -16,11 +17,17 @@ def main(argv=None):
     parser.add_argument('--reset', action='store_true')
     parser.add_argument('--yes', action='store_true', help='Confirma exclusão/reset não interativo')
     parser.add_argument('--data-dir', help='Diretório isolado para a base')
+    parser.add_argument('--ask', metavar='PERGUNTA', help='Consulta única em streaming')
+    parser.add_argument('--sources', action='store_true')
     args = parser.parse_args(argv)
     try:
         from pathlib import Path
         overrides = {'chroma_persist_dir':Path(args.data_dir)/'chroma'} if args.data_dir else {}
-        settings = load_settings(args.profile,**overrides)
+        saved_profile = Path(sys.prefix) / 'rag-profile.txt'
+        profile = args.profile
+        if profile is None and saved_profile.is_file() and saved_profile.read_text().strip() == 'cpu':
+            profile = 'cpu'
+        settings = load_settings(profile,**overrides)
         if args.prepare:
             from .models.downloader import ModelCache
             cache = ModelCache(settings)
@@ -43,6 +50,9 @@ def main(argv=None):
             if args.add:
                 from .ui.ingestion import ingest
                 return 1 if any(r['status']=='failed' for r in ingest(app,args.add)) else 0
+            if args.ask:
+                from .ui.chat import respond
+                return 0 if respond(app,args.ask,details=args.sources) is not None else 1
             if args.list:
                 show_documents(app.catalog.list_sources())
             elif args.delete:

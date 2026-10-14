@@ -9,6 +9,7 @@ class Application:
         self.llm, self.embedder = LLM(settings), Embedder(settings)
         self.lifecycle = ModelLifecycle(self.llm,self.embedder,settings.memory_mode)
         self._catalog = self._ingestor = self._lock = None
+        self._pipeline = None
 
     @property
     def catalog(self):
@@ -48,3 +49,10 @@ class Application:
         if self._lock:
             self._lock.release()
             self._lock = None
+
+    @property
+    def pipeline(self):
+        if self._pipeline is None:
+            from .rag.pipeline import Pipeline
+            self._pipeline = Pipeline(self.settings,self.llm,self.embedder,self.ingestor)
+        return self._pipeline

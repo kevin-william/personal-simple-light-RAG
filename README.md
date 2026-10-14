@@ -111,3 +111,15 @@ atualizam memória. Perguntas sem evidência recebem uma recusa explícita.
 O menu oferece confirmação de exclusão/reset e relatório por arquivo.
 `--data-dir CAMINHO` seleciona outra base. A base tem um lock de runtime
 para impedir duas instâncias de manipularem o mesmo armazenamento.
+
+## Chat
+
+```powershell
+.venv/Scripts/python main.py --ask "Como configurar autenticação?" --sources
+```
+
+Ou escolha Chat no menu. `/clear` limpa a última mensagem e resumo;
+`/sources` alterna detalhes de fontes; `/exit` volta ao menu. Ctrl+C cancela
+uma resposta sem salvar a resposta parcial na memória. Base vazia pede ingestão.
+O perfil CPU escolhido pelo instalador fica registrado na venv; em instalações
+manuais selecione `--profile cpu`. Sem seleção CPU, CUDA continua padrão.

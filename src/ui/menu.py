@@ -5,13 +5,16 @@ from .ingestion import ingest,remove,reset
 def menu(app,ask=input,out=console):
     while True:
         out.print('\n[bold]Personal Simple Light RAG[/bold]\n'
-                  '2. Adicionar/atualizar arquivo ou pasta\n3. Listar documentos\n'
+                  '1. Chat com documentos\n2. Adicionar/atualizar arquivo ou pasta\n3. Listar documentos\n'
                   '4. Remover origem\n5. Resetar base\n6. Configuração/hardware\n0. Sair')
         try:
             choice = ask('Opção: ').strip()
             if choice == '0':
                 return
-            if choice == '2':
+            if choice == '1':
+                from .chat import chat
+                chat(app,out=out)
+            elif choice == '2':
                 ingest(app,ask('Arquivo/pasta: ').strip().strip('"'),out)
             elif choice == '3':
                 show_documents(app.catalog.list_sources(),out)
