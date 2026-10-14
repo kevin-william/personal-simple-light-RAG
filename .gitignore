@@ -3,9 +3,9 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .env
-data/
-models/
-work/
+/data/
+/models/
+/work/
 *.egg-info/
 build/
 dist/
