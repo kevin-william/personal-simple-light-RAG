@@ -18,7 +18,11 @@ def show_documents(sources,out=console):
 def show_sources(answer,out=console):
     out.print(f'{len(answer.candidates)} candidatos recuperados; {len(answer.supplied)} fornecidos; {len(answer.cited)} citados.')
     cited = {h.id for h in answer.cited}
-    for i,hit in enumerate(answer.supplied,1):
+    inherited = answer.mode == 'transformation'
+    if inherited:
+        out.print('Fontes herdadas da resposta reformulada; similaridade da busca anterior.')
+    for i,hit in enumerate(answer.cited if inherited else answer.supplied,1):
+        i = hit.metadata.get('citation',i) if inherited else i
         label = 'citada' if hit.id in cited else 'fornecida, não citada'
         metadata = hit.metadata
         location = f'página {metadata["page"]}' if 'page' in metadata else f'linhas {metadata.get("line_start","?")}–{metadata.get("line_end","?")}'

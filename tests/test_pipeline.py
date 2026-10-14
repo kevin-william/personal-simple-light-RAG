@@ -17,6 +17,9 @@ class FakeLLM:
         yield 'Resposta [1].'
     def complete(self,*args,**kwargs):
         return 'Tema X'
+    def structured(self,messages,*args,**kwargs):
+        import json
+        return {'fragments':[json.loads(messages[1]['content'])['question_to_remember']]}
 
 
 def build(tmp_path,question='OAuth2 no X'):
@@ -58,3 +61,13 @@ def test_invalid_citation_no_evidence_and_clarification(tmp_path):
     assert p.last_result.mode == 'no_evidence'
     p.resolver.resolve = lambda *a:Resolution(standalone_query='q',relevant_context='',needs_retrieval=True,clarification_needed='Qual produto?')
     assert ''.join(p.stream('q')) == 'Qual produto?'
+
+
+def test_exact_code_quote_gets_traceable_source(tmp_path):
+    p = build(tmp_path)
+    command = 'powershell -File setup.ps1 -Profile cpu'
+    p.ingestor.query = lambda *a:[Hit('v:0',f'Execute `{command}`.',{'version':'v','source':'doc'},0.)]
+    p.llm.stream = lambda messages:iter([f'`{command}`'])
+    text = ''.join(p.stream('setup?'))
+    assert text.endswith('[1]') and p.last_result.cited[0].id=='v:0'
+    assert p.last_result.model_text==f'`{command}`'

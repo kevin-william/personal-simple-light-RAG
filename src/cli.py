@@ -5,6 +5,9 @@ from .config import load_settings
 
 
 def main(argv=None):
+    for stream in (sys.stdout,sys.stderr):
+        if hasattr(stream,'reconfigure'):
+            stream.reconfigure(encoding='utf-8')
     parser = argparse.ArgumentParser(description='Chat local com seus documentos')
     parser.add_argument('--profile', choices=['cuda', 'cpu'])
     parser.add_argument('--status', action='store_true')
@@ -58,7 +61,7 @@ def main(argv=None):
             elif args.delete:
                 print(app.ingestor.delete_source(args.delete,confirmed=args.yes))
             elif args.reset:
-                print(app.ingestor.reset(confirmed=args.yes))
+                print(app.reset(confirmed=args.yes))
             else:
                 from .ui.menu import menu
                 menu(app)

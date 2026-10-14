@@ -43,11 +43,12 @@ def chat(app,ask=None,out=console):
                 return
             if question == '/clear':
                 if app._pipeline:
-                    app.pipeline.memory.clear()
+                    app.pipeline.clear_memory()
                 out.print('Memória limpa.')
             elif question == '/sources':
                 details = not details
                 if app._pipeline:
+                    app.pipeline.sync()
                     show_sources(app.pipeline.last_result,out)
                 out.print('Detalhes de fontes: '+('ativados' if details else 'desativados'))
             else:

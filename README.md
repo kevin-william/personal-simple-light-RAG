@@ -20,19 +20,25 @@ e [tasks/index.md](tasks/index.md). Documentos de origem nunca são apagados.
 
 ## Preparação Windows
 
+Para instalar as dependências e preparar o projeto para execução sem GPU,
+use `powershell -ExecutionPolicy Bypass -File scripts/setup.ps1 -Profile cpu`.
+Esse instalador cria o ambiente Python, instala os pacotes CPU e baixa os modelos.
+O comando `--status` somente exibe configuração; não instala nem prepara pacotes.
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
 # Alternativa explícita, sem GPU:
 powershell -ExecutionPolicy Bypass -File scripts/setup.ps1 -Profile cpu
 ```
 
-Python 3.12 x64; PyTorch 2.6.0 (cu124 ou CPU), llama-cpp-python 0.3.4
-(wheel CUDA 12.4) ou 0.3.19 (wheel CPU). Perfis usam versões diferentes
+Python 3.12 x64; PyTorch 2.6.0 (cu124 ou CPU), llama-cpp-python 0.3.36
+(wheel CUDA 12.4 `py3-none-win_amd64`) ou 0.3.19 (wheel CPU). Perfis usam versões diferentes
 porque os índices oficiais oferecem wheels Windows distintos. Driver NVIDIA
 deve suportar CUDA 12.4; o diagnóstico testa os backends separadamente.
 Não há fallback para compilar C++. Instalação não altera Python global.
 `-SkipModels` instala sem baixar pesos. `--diagnose` verifica backends sem pesos.
-O comando de preparação de modelos será acrescentado na próxima tarefa.
+O wheel CUDA é fixado por URL e SHA256 do release upstream. Versões antigas
+como 0.3.4 não reconhecem o pre-tokenizer `gpt-4o` deste GGUF.
 
 ## Modelos
 
@@ -79,13 +85,22 @@ com contagem pelo mesmo serializer, sem ChatML nem duplicação de tokens.
 Marcadores especiais presentes em texto de usuário/documentos são escapados.
 `MEMORY_MODE=alternating` libera um modelo antes de carregar o outro; é útil
 para pouca VRAM. `N_GPU_LAYERS` permite offload parcial explícito.
+No modo residente, uma estimativa conservadora compara tamanho dos pesos
+e reserva de 1 GiB à memória disponível antes de carregar o segundo modelo;
+o primeiro pode ser liberado automaticamente. É uma heurística, não garantia
+de memória suficiente nem troca de modelo/backend.
 Status de offload efetivo vem do log nativo quando disponível; não é inferido
 do parâmetro solicitado. Nenhum modelo é carregado pelo menu/listagem.
+`LLM_BATCH_SIZE=128` reduz a memória temporária de prefill; pode ser ajustado
+explicitamente para comparar desempenho. As DLLs CUDA do PyTorch são usadas
+no processo Windows, sem exigir instalação de compilador C++/CUDA Toolkit.
 
 ## Conversa
 
-Memória mantém apenas a última mensagem completa e um resumo enxuto gerado
-pela LLM, limitado por tokens. Atualização/exclusão da base invalida essa memória.
+Memória mantém apenas a última mensagem completa e um resumo extrativo enxuto
+selecionado pela LLM (até 3 fragmentos/35 palavras e o limite de tokens).
+Fragmentos devem existir literalmente na conversa: comandos inventados são
+rejeitados com uma tentativa de reparo. Atualização/exclusão invalida essa memória.
 A LLM resolve continuações em uma pergunta independente e contexto mínimo;
 somente a pergunta independente vai ao BGE-M3. Ambiguidades pedem clarificação.
 Templates de perguntas triviais orientam a LLM, sem substituições por palavras-chave.
@@ -94,11 +109,18 @@ Saída JSON inválida recebe no máximo uma tentativa de reparo.
 O pipeline reserva tokens para resposta e conta o template oficial no orçamento.
 Entradas essenciais excessivas são recusadas; chunks podem ser reduzidos e
 o painel mostra o trecho efetivamente fornecido. Citações válidas apontam para
-esses trechos; IDs inválidos ou ausência de citações geram aviso. IDs corretos
+esses trechos; IDs inválidos geram aviso. IDs corretos
 não garantem que o texto sustenta cada afirmação. Respostas interrompidas não
 atualizam memória. Perguntas sem evidência recebem uma recusa explícita.
+Quando a resposta inteira é um comando em código inline copiado literalmente
+de um trecho fornecido, a aplicação acrescenta sua referência se o modelo a
+omitiu. Isso comprova a localização do texto, não sua pertinência à pergunta.
 
 ## Gerenciar documentos
+
+Para ver, visualizar ou listar todos os documentos já indexados, execute
+`.venv/Scripts/python main.py --list` ou escolha **3. Listar documentos** no menu.
+Essa listagem mostra ID de origem, caminho e quantidade de trechos por arquivo.
 
 ```powershell
 .venv/Scripts/python main.py
