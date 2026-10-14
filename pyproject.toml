@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "personal-simple-light-rag"
+version = "0.1.0"
+description = "Local document RAG with Phi-4-mini, BGE-M3 and ChromaDB"
+requires-python = ">=3.12,<3.13"
+dependencies = ["pydantic-settings==2.10.1", "rich==14.1.0", "prompt-toolkit==3.0.52"]
+
+[project.scripts]
+light-rag = "src.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = ["integration_models: requires cached GGUF/BGE-M3; run with --models"]

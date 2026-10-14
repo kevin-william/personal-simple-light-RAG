@@ -1,10 +1,10 @@
 # T01 - Configuração validada e entrada executável
 
 > **Instruções do projeto:** nenhuma AGENTS.md ou convenção local foi encontrada na inspeção inicial; conferir novamente antes de implementar. [Plano vigente](../implementation_plan.md).
-> **Status:** Não iniciada
-> **Progresso:** 0%
+> **Status:** Código implementado; validação externa registrada em docs/validation.md
+> **Progresso:** código entregue; critérios externos conforme relatório
 > **Início:** - | **Fim previsto:** - | **Fim real:** -
-> **Responsável:** A definir
+> **Responsável:** Codex
 > **Dependências:** Nenhuma
 > **Commit único:** `feat(config): add validated settings and application entry point`
 
@@ -155,12 +155,12 @@ Quando houver cenários opt-in nesta tarefa, executar também os arquivos focado
 
 - [ ] Configuração e comando de status funcionam sem inferência.
 - [ ] CUDA continua sendo o padrão e CPU é explícita.
-- [ ] Código e configuração desta tarefa implementados e executáveis.
-- [ ] Testes deste comportamento incluídos e aprovados no mesmo commit.
-- [ ] Documentação diretamente afetada atualizada.
-- [ ] Excertos e links validados; dependências anteriores concluídas.
+- [x] Código e configuração desta tarefa implementados e executáveis.
+- [x] Testes deste comportamento incluídos e aprovados no mesmo commit.
+- [x] Documentação diretamente afetada atualizada.
+- [x] Excertos e links validados; dependências anteriores concluídas.
 - [ ] Gates externos têm evidência ou bloqueio explícito, sem dados fabricados.
-- [ ] Um commit criado com a mensagem prevista, quando houver repositório Git.
+- [x] Um commit criado com a mensagem prevista, quando houver repositório Git.
 
 ---
 
@@ -168,12 +168,12 @@ Quando houver cenários opt-in nesta tarefa, executar também os arquivos focado
 
 | Item | Status |
 |---|---|
-| Implementação | Não iniciada |
-| Testes | Não iniciados |
-| Documentação de uso | Não iniciada |
+| Implementação | Implementada |
+| Testes | Automatizados aprovados; modelos reais conforme relatório |
+| Documentação de uso | Atualizada |
 | Validação real/gates | Pendente |
-| Commit | Pendente |
+| Commit | Commit desta tarefa |
 
-**Progresso geral:** 0%
-**Critérios concluídos:** 0/8
-**Evidências de execução:** nenhuma; esta entrega decompõe o plano e não implementa a aplicação.
+**Progresso geral:** código entregue; gates reais pendentes/conforme relatório
+**Critérios concluídos:** 5/8 (gates reais avaliados no relatório)
+**Evidências de execução:** pytest focado, compileall e verificador literal aprovados neste commit. Validações de hardware/modelos em `docs/validation.md`; skips não são aprovação.

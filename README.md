@@ -1,0 +1,35 @@
+# Personal Simple Light RAG
+
+Chat CLI local em Python: Phi-4-mini Q8_0, BGE-M3 e ChromaDB.
+GPU NVIDIA/CUDA é o padrão recomendado. CPU é uma opção explícita.
+
+## Configuração
+
+Python 3.12 x64. A entrada não carrega modelos para mostrar configuração:
+
+```powershell
+python main.py --status
+python main.py --profile cpu --status
+```
+
+Copie `.env.example` para `.env` para personalizar os limites. Caminhos são
+relativos à raiz da aplicação, não ao diretório atual do terminal.
+
+O plano e as tarefas estão em [implementation_plan.md](implementation_plan.md)
+e [tasks/index.md](tasks/index.md). Documentos de origem nunca são apagados.
+
+## Preparação Windows
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
+# Alternativa explícita, sem GPU:
+powershell -ExecutionPolicy Bypass -File scripts/setup.ps1 -Profile cpu
+```
+
+Python 3.12 x64; PyTorch 2.6.0 (cu124 ou CPU), llama-cpp-python 0.3.4
+(wheel CUDA 12.4) ou 0.3.19 (wheel CPU). Perfis usam versões diferentes
+porque os índices oficiais oferecem wheels Windows distintos. Driver NVIDIA
+deve suportar CUDA 12.4; o diagnóstico testa os backends separadamente.
+Não há fallback para compilar C++. Instalação não altera Python global.
+`-SkipModels` instala sem baixar pesos. `--diagnose` verifica backends sem pesos.
+O comando de preparação de modelos será acrescentado na próxima tarefa.
