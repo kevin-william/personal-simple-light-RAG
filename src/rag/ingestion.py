@@ -12,12 +12,23 @@ class Ingestor:
 
     def recover(self):
         active = self.catalog.active_versions()
+        issues = []
         for version in self.catalog.all_versions():
-            if version['id'] not in active:
-                self.store.delete_version(version['id'])
-                self.catalog.forget_version(version['id'])
+            if version['id'] in active:
+                if self.store.count_version(version['id']) != version['expected']:
+                    raise RuntimeError('Índice ativo incompleto/corrompido. Preserve a base e reimporte em uma nova coleção.')
+            else:
+                try:
+                    self.store.delete_version(version['id'])
+                    self.catalog.forget_version(version['id'])
+                except Exception as error:
+                    issues.append(f'Limpeza pendente {version["id"]}: {error}')
         for version in self.store.versions() - active:
-            self.store.delete_version(version)
+            try:
+                self.store.delete_version(version)
+            except Exception as error:
+                issues.append(f'Vetores órfãos: {error}')
+        return issues
 
     def ingest_file(self, path):
         path = Path(path).resolve()
@@ -29,18 +40,18 @@ class Ingestor:
         existing = self.catalog.source(path)
         if existing and existing['version'] == version:
             return {'path':str(path), 'status':'skipped', 'id':existing['id']}
-        if existing:
-            raise ValueError('Atualização de arquivo ainda não disponível nesta etapa.')
         known = self.catalog.version(version)
         if known and known['state'] == 'active':
             identifier = self.catalog.activate(version,path)
-            return {'path':str(path),'status':'added','id':identifier,'alias':True}
+            issues = self.recover()
+            return {'path':str(path),'status':'updated' if existing else 'added','id':identifier,'alias':True,'warnings':issues}
         chunks = self.embedder.prepare_chunks(split_documents(load_file(path),
                 self.settings.chunk_size_chars,self.settings.chunk_overlap_chars))
         if not chunks:
             raise ValueError('Documento sem trechos indexáveis.')
         self.catalog.stage(version,content_hash,self.settings.fingerprint,len(chunks))
         try:
+            self.store.delete_version(version)
             vectors = self.embedder.encode([c.text for c in chunks])
             self.store.add(version,chunks,vectors)
             if self.store.count_version(version) != len(chunks):
@@ -49,13 +60,30 @@ class Ingestor:
                 raise RuntimeError('Arquivo mudou durante a indexação; repita a importação.')
             identifier = self.catalog.activate(version,path)
         except Exception as error:
-            self.catalog.fail(version,error)
-            try:
-                self.store.delete_version(version)
-            except Exception:
-                pass  # Failed version remains invisible; recover retries cleanup.
+            if version not in self.catalog.active_versions():
+                self.catalog.fail(version,error)
+                try:
+                    self.store.delete_version(version)
+                except Exception:
+                    pass  # Failed version remains invisible; recover retries cleanup.
             raise
-        return {'path':str(path),'status':'added','id':identifier,'chunks':len(chunks)}
+        issues = self.recover()
+        return {'path':str(path),'status':'updated' if existing else 'added','id':identifier,'chunks':len(chunks),'warnings':issues}
+
+    def ingest_path(self, path, progress=None):
+        paths = discover(path)
+        results = []
+        for i, item in enumerate(paths,1):
+            try:
+                with warnings.catch_warnings(record=True) as caught:
+                    result = self.ingest_file(item)
+                result.setdefault('warnings',[]).extend(str(w.message) for w in caught)
+            except Exception as error:
+                result = {'path':str(item),'status':'failed','error':str(error)}
+            results.append(result)
+            if progress:
+                progress(i,len(paths),result)
+        return results
 
     def query(self, vector, k):
         hits = self.store.query(vector,k,self.catalog.active_versions())

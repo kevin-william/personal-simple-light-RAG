@@ -61,3 +61,8 @@ Importação usa hash de conteúdo e IDs determinísticos. Reimportar conteúdo
 inalterado não recalcula embeddings; arquivos idênticos compartilham vetores
 e mantêm aliases de origem. Apenas versões completas/ativas entram na busca.
 Há suporte a um escritor local por vez; execução multiprocesso é fora de escopo.
+
+Atualizações são preparadas antes de trocar o ponteiro ativo no SQLite.
+Erros preservam a versão anterior. Ao iniciar, preparações incompletas são
+limpas para reimportação idempotente; limpeza pós-ativação pode ser repetida.
+Arquivos com conteúdo compartilhado não perdem aliases por uma atualização.
