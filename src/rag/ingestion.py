@@ -94,3 +94,15 @@ class Ingestor:
                 hit.metadata = dict(hit.metadata, source=aliases[0]['path'], document_id=aliases[0]['id'])
                 hit.metadata['aliases'] = [s['path'] for s in aliases]
         return hits
+
+    def delete_source(self, identifier, confirmed=False):
+        if not confirmed:
+            raise ValueError('Exclusão exige confirmação explícita.')
+        removed = self.catalog.remove_source(identifier)
+        return {'removed':removed, 'warnings':self.recover()}
+
+    def reset(self, confirmed=False):
+        if not confirmed:
+            raise ValueError('Reset exige confirmação explícita.')
+        self.catalog.clear()
+        return {'warnings':self.recover()}

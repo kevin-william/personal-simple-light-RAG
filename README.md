@@ -66,3 +66,7 @@ Atualizações são preparadas antes de trocar o ponteiro ativo no SQLite.
 Erros preservam a versão anterior. Ao iniciar, preparações incompletas são
 limpas para reimportação idempotente; limpeza pós-ativação pode ser repetida.
 Arquivos com conteúdo compartilhado não perdem aliases por uma atualização.
+
+Exclusão usa ID estável de origem, não nome de arquivo. Remover um alias
+preserva os demais; reset exige confirmação explícita. Arquivos originais
+não são removidos. A visibilidade é retirada antes da limpeza recuperável.
