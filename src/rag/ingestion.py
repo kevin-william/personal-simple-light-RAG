@@ -1,0 +1,68 @@
+from pathlib import Path
+from hashlib import sha256
+import warnings
+from .loaders import discover, load_file
+from .splitter import split_documents
+from ..models.downloader import digest
+
+
+class Ingestor:
+    def __init__(self, settings, catalog, store, embedder):
+        self.settings, self.catalog, self.store, self.embedder = settings, catalog, store, embedder
+
+    def recover(self):
+        active = self.catalog.active_versions()
+        for version in self.catalog.all_versions():
+            if version['id'] not in active:
+                self.store.delete_version(version['id'])
+                self.catalog.forget_version(version['id'])
+        for version in self.store.versions() - active:
+            self.store.delete_version(version)
+
+    def ingest_file(self, path):
+        path = Path(path).resolve()
+        if path.suffix.lower() not in {'.pdf','.md','.txt'}:
+            raise ValueError('Formato não suportado. Use PDF, TXT ou Markdown.')
+        content_hash = digest(path)
+        kind = 'pdf' if path.suffix.lower() == '.pdf' else 'text'
+        version = sha256((content_hash+self.settings.fingerprint+kind).encode()).hexdigest()
+        existing = self.catalog.source(path)
+        if existing and existing['version'] == version:
+            return {'path':str(path), 'status':'skipped', 'id':existing['id']}
+        if existing:
+            raise ValueError('Atualização de arquivo ainda não disponível nesta etapa.')
+        known = self.catalog.version(version)
+        if known and known['state'] == 'active':
+            identifier = self.catalog.activate(version,path)
+            return {'path':str(path),'status':'added','id':identifier,'alias':True}
+        chunks = self.embedder.prepare_chunks(split_documents(load_file(path),
+                self.settings.chunk_size_chars,self.settings.chunk_overlap_chars))
+        if not chunks:
+            raise ValueError('Documento sem trechos indexáveis.')
+        self.catalog.stage(version,content_hash,self.settings.fingerprint,len(chunks))
+        try:
+            vectors = self.embedder.encode([c.text for c in chunks])
+            self.store.add(version,chunks,vectors)
+            if self.store.count_version(version) != len(chunks):
+                raise RuntimeError('Versão vetorial incompleta; não ativada.')
+            if digest(path) != content_hash:
+                raise RuntimeError('Arquivo mudou durante a indexação; repita a importação.')
+            identifier = self.catalog.activate(version,path)
+        except Exception as error:
+            self.catalog.fail(version,error)
+            try:
+                self.store.delete_version(version)
+            except Exception:
+                pass  # Failed version remains invisible; recover retries cleanup.
+            raise
+        return {'path':str(path),'status':'added','id':identifier,'chunks':len(chunks)}
+
+    def query(self, vector, k):
+        hits = self.store.query(vector,k,self.catalog.active_versions())
+        sources = self.catalog.list_sources()
+        for hit in hits:
+            aliases = [s for s in sources if s['version'] == hit.metadata['version']]
+            if aliases:
+                hit.metadata = dict(hit.metadata, source=aliases[0]['path'], document_id=aliases[0]['id'])
+                hit.metadata['aliases'] = [s['path'] for s in aliases]
+        return hits
