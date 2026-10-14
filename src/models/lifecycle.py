@@ -6,7 +6,9 @@ class ModelLifecycle:
 
     def select(self, component):
         if self.mode == 'alternating':
-            (self.embedder if component == 'llm' else self.llm).unload()
+            other = self.embedder if component == 'llm' else self.llm
+            if getattr(other, 'model', True) is not None:
+                other.unload()
 
     def close(self):
         self.llm.unload()

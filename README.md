@@ -90,3 +90,10 @@ A LLM resolve continuações em uma pergunta independente e contexto mínimo;
 somente a pergunta independente vai ao BGE-M3. Ambiguidades pedem clarificação.
 Templates de perguntas triviais orientam a LLM, sem substituições por palavras-chave.
 Saída JSON inválida recebe no máximo uma tentativa de reparo.
+
+O pipeline reserva tokens para resposta e conta o template oficial no orçamento.
+Entradas essenciais excessivas são recusadas; chunks podem ser reduzidos e
+o painel mostra o trecho efetivamente fornecido. Citações válidas apontam para
+esses trechos; IDs inválidos ou ausência de citações geram aviso. IDs corretos
+não garantem que o texto sustenta cada afirmação. Respostas interrompidas não
+atualizam memória. Perguntas sem evidência recebem uma recusa explícita.
