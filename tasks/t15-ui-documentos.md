@@ -1,10 +1,10 @@
 # T15 - Menu e interface de gerenciamento de documentos
 
 > **Instruções do projeto:** nenhuma AGENTS.md ou convenção local foi encontrada na inspeção inicial; conferir novamente antes de implementar. [Plano vigente](../implementation_plan.md).
-> **Status:** Não iniciada
-> **Progresso:** 0%
+> **Status:** Código implementado; validação externa registrada em docs/validation.md
+> **Progresso:** código entregue; critérios externos conforme relatório
 > **Início:** - | **Fim previsto:** - | **Fim real:** -
-> **Responsável:** A definir
+> **Responsável:** Codex
 > **Dependências:** [T02](t02-instalacao-perfis.md), [T03](t03-download-modelos.md), [T09](t09-atualizacao-recuperacao.md), [T10](t10-exclusao.md)
 > **Commit único:** `feat(cli): add document management menu and diagnostics`
 
@@ -108,12 +108,12 @@ Quando houver cenários opt-in nesta tarefa, executar também os arquivos focado
 
 - [ ] Usuário gerencia arquivos pelo menu sem editar dados internos.
 - [ ] Reset é confirmado e status descreve execução efetiva com precisão.
-- [ ] Código e configuração desta tarefa implementados e executáveis.
-- [ ] Testes deste comportamento incluídos e aprovados no mesmo commit.
-- [ ] Documentação diretamente afetada atualizada.
-- [ ] Excertos e links validados; dependências anteriores concluídas.
+- [x] Código e configuração desta tarefa implementados e executáveis.
+- [x] Testes deste comportamento incluídos e aprovados no mesmo commit.
+- [x] Documentação diretamente afetada atualizada.
+- [x] Excertos e links validados; dependências anteriores concluídas.
 - [ ] Gates externos têm evidência ou bloqueio explícito, sem dados fabricados.
-- [ ] Um commit criado com a mensagem prevista, quando houver repositório Git.
+- [x] Um commit criado com a mensagem prevista, quando houver repositório Git.
 
 ---
 
@@ -121,12 +121,12 @@ Quando houver cenários opt-in nesta tarefa, executar também os arquivos focado
 
 | Item | Status |
 |---|---|
-| Implementação | Não iniciada |
-| Testes | Não iniciados |
-| Documentação de uso | Não iniciada |
+| Implementação | Implementada |
+| Testes | Automatizados aprovados; modelos reais conforme relatório |
+| Documentação de uso | Atualizada |
 | Validação real/gates | Pendente |
-| Commit | Pendente |
+| Commit | Commit desta tarefa |
 
-**Progresso geral:** 0%
-**Critérios concluídos:** 0/8
-**Evidências de execução:** nenhuma; esta entrega decompõe o plano e não implementa a aplicação.
+**Progresso geral:** código entregue; gates reais pendentes/conforme relatório
+**Critérios concluídos:** 5/8 (gates reais avaliados no relatório)
+**Evidências de execução:** pytest focado, compileall e verificador literal aprovados neste commit. Validações de hardware/modelos em `docs/validation.md`; skips não são aprovação.

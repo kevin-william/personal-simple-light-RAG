@@ -97,3 +97,17 @@ o painel mostra o trecho efetivamente fornecido. Citações válidas apontam par
 esses trechos; IDs inválidos ou ausência de citações geram aviso. IDs corretos
 não garantem que o texto sustenta cada afirmação. Respostas interrompidas não
 atualizam memória. Perguntas sem evidência recebem uma recusa explícita.
+
+## Gerenciar documentos
+
+```powershell
+.venv/Scripts/python main.py
+.venv/Scripts/python main.py --add "C:\documentos"
+.venv/Scripts/python main.py --list
+.venv/Scripts/python main.py --delete ID_ORIGEM --yes
+.venv/Scripts/python main.py --reset --yes
+```
+
+O menu oferece confirmação de exclusão/reset e relatório por arquivo.
+`--data-dir CAMINHO` seleciona outra base. A base tem um lock de runtime
+para impedir duas instâncias de manipularem o mesmo armazenamento.
