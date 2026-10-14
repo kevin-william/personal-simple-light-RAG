@@ -81,3 +81,12 @@ Marcadores especiais presentes em texto de usuário/documentos são escapados.
 para pouca VRAM. `N_GPU_LAYERS` permite offload parcial explícito.
 Status de offload efetivo vem do log nativo quando disponível; não é inferido
 do parâmetro solicitado. Nenhum modelo é carregado pelo menu/listagem.
+
+## Conversa
+
+Memória mantém apenas a última mensagem completa e um resumo enxuto gerado
+pela LLM, limitado por tokens. Atualização/exclusão da base invalida essa memória.
+A LLM resolve continuações em uma pergunta independente e contexto mínimo;
+somente a pergunta independente vai ao BGE-M3. Ambiguidades pedem clarificação.
+Templates de perguntas triviais orientam a LLM, sem substituições por palavras-chave.
+Saída JSON inválida recebe no máximo uma tentativa de reparo.
