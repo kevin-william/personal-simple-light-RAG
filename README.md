@@ -123,3 +123,14 @@ Ou escolha Chat no menu. `/clear` limpa a última mensagem e resumo;
 uma resposta sem salvar a resposta parcial na memória. Base vazia pede ingestão.
 O perfil CPU escolhido pelo instalador fica registrado na venv; em instalações
 manuais selecione `--profile cpu`. Sem seleção CPU, CUDA continua padrão.
+
+## Testes e benchmarks
+
+```powershell
+.venv/Scripts/python -m pytest -m "not integration_models" --basetemp work/pytest -q
+.venv/Scripts/python scripts/verify_plan_excerpts.py tasks --plan implementation_plan.md
+```
+
+Testes de modelos reais são opt-in (`--models --model-profile cpu` ou `cuda`).
+Benchmarks por fase e avaliação estão em [docs/benchmarks.md](docs/benchmarks.md).
+Resultados observados e gates pendentes: [docs/validation.md](docs/validation.md).

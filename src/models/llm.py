@@ -2,6 +2,7 @@ import json
 import re
 from .downloader import ModelCache
 from .hardware import require_device
+from ..metrics import measured
 
 
 def serialize(messages):
@@ -23,6 +24,7 @@ class LLM:
         self.offload_effective = None
         self._callback = None
 
+    @measured('llm_load',lambda self:self.model is None)
     def load(self):
         if hasattr(self, 'before_load'):
             self.before_load()

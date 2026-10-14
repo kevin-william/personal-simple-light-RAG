@@ -4,6 +4,7 @@ from ..rag.loaders import clean_text
 from ..rag.splitter import split_documents
 from .downloader import ModelCache
 from .hardware import require_device
+from ..metrics import measured
 
 
 class Embedder:
@@ -12,6 +13,7 @@ class Embedder:
         self.model = None
         self.verified = False
 
+    @measured('embeddings_load',lambda self:self.model is None)
     def load(self):
         if hasattr(self, 'before_load'):
             self.before_load()
@@ -58,6 +60,7 @@ class Embedder:
             chunk.metadata['position'] = i
         return result
 
+    @measured('embeddings')
     def encode(self, texts):
         texts = [clean_text(t) for t in texts]
         if not texts:

@@ -4,6 +4,7 @@ import warnings
 from .loaders import discover, load_file
 from .splitter import split_documents
 from ..models.downloader import digest
+from ..metrics import measured
 
 
 class Ingestor:
@@ -30,6 +31,7 @@ class Ingestor:
                 issues.append(f'Vetores órfãos: {error}')
         return issues
 
+    @measured('indexing')
     def ingest_file(self, path):
         path = Path(path).resolve()
         if path.suffix.lower() not in {'.pdf','.md','.txt'}:

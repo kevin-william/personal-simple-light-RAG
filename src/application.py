@@ -1,12 +1,15 @@
 from .models.llm import LLM
 from .models.embeddings import Embedder
 from .models.lifecycle import ModelLifecycle
+from .metrics import Metrics
 
 
 class Application:
     def __init__(self, settings):
         self.settings = settings
         self.llm, self.embedder = LLM(settings), Embedder(settings)
+        self.metrics = Metrics()
+        self.llm.metrics = self.embedder.metrics = self.metrics
         self.lifecycle = ModelLifecycle(self.llm,self.embedder,settings.memory_mode)
         self._catalog = self._ingestor = self._lock = None
         self._pipeline = None
@@ -36,6 +39,7 @@ class Application:
             from .rag.vectorstore import VectorStore
             from .rag.ingestion import Ingestor
             self._ingestor = Ingestor(self.settings,self.catalog,VectorStore(self.settings),self.embedder)
+            self._ingestor.metrics = self.metrics
             for issue in self._ingestor.recover():
                 import warnings
                 warnings.warn(issue,stacklevel=2)
@@ -54,5 +58,5 @@ class Application:
     def pipeline(self):
         if self._pipeline is None:
             from .rag.pipeline import Pipeline
-            self._pipeline = Pipeline(self.settings,self.llm,self.embedder,self.ingestor)
+            self._pipeline = Pipeline(self.settings,self.llm,self.embedder,self.ingestor,metrics=self.metrics)
         return self._pipeline

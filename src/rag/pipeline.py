@@ -3,6 +3,7 @@ import re
 import warnings
 from .memory import ConversationMemory
 from .query_resolver import QueryResolver
+from ..metrics import Metrics
 
 SYSTEM = ('Você responde perguntas sobre os documentos fornecidos. '
           'Use somente evidências documentais para afirmações factuais e cite [1], [2], etc. '
@@ -18,14 +19,34 @@ class Answer:
     cited: list = field(default_factory=list)
     warnings: list = field(default_factory=list)
     mode: str = 'retrieval'
+    metrics: dict = field(default_factory=dict)
 
 
 class Pipeline:
-    def __init__(self, settings, llm, embedder, ingestor, memory=None, resolver=None):
+    def __init__(self, settings, llm, embedder, ingestor, memory=None, resolver=None,metrics=None):
         self.settings, self.llm, self.embedder, self.ingestor = settings, llm, embedder, ingestor
         self.memory = memory or ConversationMemory(llm,settings.memory_summary_max_tokens)
         self.resolver = resolver or QueryResolver(llm,settings.query_resolution_max_tokens)
         self.last_result = Answer()
+        self.metrics = metrics or Metrics()
+
+    def _remember(self,question,result,references,generation):
+        with self.metrics.phase('summary'), warnings.catch_warnings(record=True) as caught:
+            self.memory.remember(question,result.text,references,generation)
+        result.warnings.extend(str(w.message) for w in caught)
+
+    def stream(self,question):
+        self.metrics.start()
+        iterator = self._stream(question)
+        try:
+            for token in iterator:
+                self.metrics.mark_token()
+                yield token
+        finally:
+            iterator.close()
+            # Tokenization does not reload a model for failures or empty-base paths.
+            count = self.llm.tokens(self.last_result.text) if self.last_result.text and getattr(self.llm,'model',True) is not None else 0
+            self.last_result.metrics = self.metrics.finish(count)
 
     def messages(self, question, resolution, hits, transform=False):
         documents = '\n\n'.join(f'[{i}] {h.metadata.get("source","")} '
@@ -66,37 +87,43 @@ class Pipeline:
                     selected.append(replace(hit,text=hit.text[:lo],metadata=dict(hit.metadata,excerpt_truncated=True)))
         return self.messages(question,resolution,selected,transform),selected
 
-    def stream(self, question):
+    def _stream(self, question):
         self.last_result = result = Answer()
         generation = self.ingestor.catalog.generation
         self.memory.sync(generation)
-        resolution = self.resolver.resolve(question,self.memory)
+        with self.metrics.phase('resolution'):
+            resolution = self.resolver.resolve(question,self.memory)
         if resolution.clarification_needed:
             result.mode = 'clarification'
             result.text = resolution.clarification_needed
             yield result.text
-            self.memory.remember(question,result.text,[],generation)
+            self._remember(question,result,[],generation)
             return
         if resolution.needs_retrieval:
-            vector = self.embedder.encode([resolution.standalone_query])[0]
-            result.candidates = self.ingestor.query(vector,self.settings.top_k)
+            with self.metrics.phase('query_embedding'):
+                vector = self.embedder.encode([resolution.standalone_query])[0]
+            with self.metrics.phase('search'):
+                result.candidates = self.ingestor.query(vector,self.settings.top_k)
             if not result.candidates:
                 result.mode = 'no_evidence'
                 result.text = 'Não encontrei informações suficientes nos documentos indexados.'
                 yield result.text
-                self.memory.remember(question,result.text,[],generation)
+                self._remember(question,result,[],generation)
                 return
         else:
             result.mode = 'transformation'
-        messages,result.supplied = self.budget(question,resolution,result.candidates,result.mode=='transformation')
+        with self.metrics.phase('prompt'):
+            messages,result.supplied = self.budget(question,resolution,result.candidates,result.mode=='transformation')
         # Visibility cannot change underneath a response in the supported single-process runtime.
         completed = False
+        self.metrics.generation_started = self.metrics.clock()
         try:
             for token in self.llm.stream(messages):
                 result.text += token
                 yield token
             completed = True
         finally:
+            self.metrics.generation_finished = self.metrics.clock()
             if not completed:
                 result.warnings.append('Resposta interrompida; memória não atualizada.')
         cited_ids = {int(x) for x in re.findall(r'\[(\d+)\]',result.text)}
@@ -111,6 +138,4 @@ class Pipeline:
             result.warnings.append('A resposta contém identificadores de fontes inválidos: '+str(sorted(cited_ids-allowed)))
         if result.mode == 'retrieval' and not cited_ids:
             result.warnings.append('A resposta não citou evidências; revise a fundamentação.')
-        with warnings.catch_warnings(record=True) as caught:
-            self.memory.remember(question,result.text,references,generation)
-        result.warnings.extend(str(w.message) for w in caught)
+        self._remember(question,result,references,generation)
