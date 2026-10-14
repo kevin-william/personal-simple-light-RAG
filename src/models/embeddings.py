@@ -13,6 +13,8 @@ class Embedder:
         self.verified = False
 
     def load(self):
+        if hasattr(self, 'before_load'):
+            self.before_load()
         if self.model is not None:
             return self.model
         if self.factory:

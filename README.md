@@ -70,3 +70,14 @@ Arquivos com conteúdo compartilhado não perdem aliases por uma atualização.
 Exclusão usa ID estável de origem, não nome de arquivo. Remover um alias
 preserva os demais; reset exige confirmação explícita. Arquivos originais
 não são removidos. A visibilidade é retirada antes da limpeza recuperável.
+
+## Inferência e memória de hardware
+
+Inferência direta com `llama-cpp-python`. Mensagens estruturadas passam por
+formatter oficial Phi (`<|system|>`, `<|user|>`, `<|assistant|>`, `<|end|>`),
+com contagem pelo mesmo serializer, sem ChatML nem duplicação de tokens.
+Marcadores especiais presentes em texto de usuário/documentos são escapados.
+`MEMORY_MODE=alternating` libera um modelo antes de carregar o outro; é útil
+para pouca VRAM. `N_GPU_LAYERS` permite offload parcial explícito.
+Status de offload efetivo vem do log nativo quando disponível; não é inferido
+do parâmetro solicitado. Nenhum modelo é carregado pelo menu/listagem.

@@ -21,7 +21,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Versão Python não suportada pelo perfil de w
 python -m pip --python $pythonExe install --only-binary=:all: pip==25.2
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao preparar pip.' }
 $torchIndex = if ($Profile -eq 'cuda') { 'https://download.pytorch.org/whl/cu124' } else { 'https://download.pytorch.org/whl/cpu' }
-& $pythonExe -m pip install --only-binary=:all: torch==2.6.0 --index-url $torchIndex
+$torchVersion = if ($Profile -eq 'cuda') { '2.6.0+cu124' } else { '2.6.0+cpu' }
+& $pythonExe -m pip install --only-binary=:all: "torch==$torchVersion" --index-url $torchIndex
 if ($LASTEXITCODE -ne 0) { throw 'Wheel PyTorch indisponível; não compilar nem trocar perfil automaticamente.' }
 $llamaVersion = if ($Profile -eq 'cuda') { '0.3.4' } else { '0.3.19' }
 $llamaIndex = if ($Profile -eq 'cuda') { 'https://abetlen.github.io/llama-cpp-python/whl/cu124' } else { 'https://abetlen.github.io/llama-cpp-python/whl/cpu' }
