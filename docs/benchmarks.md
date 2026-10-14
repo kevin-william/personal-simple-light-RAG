@@ -17,7 +17,10 @@ os registra explicitamente apenas no arquivo local solicitado.
 TTFT é a latência percebida: começa antes da resolução e termina no primeiro
 fragmento exibido. Tempo total inclui resumo após a resposta. Tokens/s mede
 geração; phases são tempos inclusivos (podem conter carregamento), portanto
-não se deve somar fases aninhadas para obter tempo total. RSS máximo é amostrado
+não se deve somar fases aninhadas para obter tempo total. `generation_seconds`
+e `tokens_per_second` incluem prefill; `llama_native` separa tempo/tokens de
+avaliação do prompt e decodificação pelas contagens nativas do llama.cpp,
+quando disponíveis. RSS máximo é amostrado
 a cada 100 ms e em fronteiras de fase; pode não capturar picos muito breves.
 VRAM por processo é medida ao fim via NVIDIA; WDDM pode informar N/A. Isso é
 `null`, não zero, e não é apresentado como pico de VRAM.

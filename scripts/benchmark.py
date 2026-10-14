@@ -9,18 +9,22 @@ import platform
 import importlib.metadata
 from src.config import load_settings
 from src.application import Application
+from src.metrics import hardware_details
 
 
 def record(question,answer,expected=(),include_text=False):
     item = {'question_sha256':sha256(question.encode()).hexdigest(),
             'answer_sha256':sha256(answer.text.encode()).hexdigest(),
             'metrics':answer.metrics,'mode':answer.mode,
-            'citations':len(answer.cited),'warnings':list(answer.warnings),
+            'citations':len(answer.cited),
+            'warnings':list(answer.warnings) if include_text else ['Aviso de execução; detalhes somente com --include-text.']*len(answer.warnings),
             'expected_phrases_present':all(p.lower() in answer.text.lower() for p in expected) if expected else None,
             'grounding_review':'pending human review'}
     if include_text:
         item.update(question=question,answer=answer.text,
-                    sources=[{'path':h.metadata.get('source'),'text':h.text} for h in answer.cited])
+                    resolved_query=answer.resolved_query,summary=answer.summary,
+                    sources=[{'path':h.metadata.get('source'),'text':h.text} for h in answer.cited],
+                    supplied=[{'path':h.metadata.get('source'),'text':h.text} for h in answer.supplied])
     return item
 
 
@@ -39,7 +43,7 @@ def main(argv=None):
     manifest = json.loads(args.corpus.read_text(encoding='utf-8'))
     s = load_settings(args.profile,memory_mode=args.mode,chroma_persist_dir=args.data_dir.resolve()/'chroma')
     app = Application(s)
-    report = {'hardware':platform.platform(),'python':platform.python_version(),
+    report = {'hardware':hardware_details(),'python':platform.python_version(),
               'settings':s.model_dump(mode='json'),'corpus_sha256':sha256(args.corpus.read_bytes()).hexdigest(),
               'versions':{},'quality_review':'pending','records':[]}
     for package in ('torch','llama-cpp-python','sentence-transformers','chromadb'):
@@ -66,7 +70,7 @@ def main(argv=None):
                 report['records'].append(item)
         report['offload_observed'] = app.llm.offload_effective
     except Exception as error:
-        report['error'] = str(error)
+        report['error'] = str(error) if args.include_text else type(error).__name__+': execução falhou; detalhes somente com --include-text.'
     finally:
         app.close()
         args.output.parent.mkdir(parents=True,exist_ok=True)

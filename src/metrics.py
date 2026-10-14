@@ -30,6 +30,26 @@ def gpu_memory():
         return None
 
 
+def hardware_details():
+    import platform
+    result = {'os':platform.platform(),'cpu':platform.processor(),'ram_total_bytes':None,'nvidia_devices':[]}
+    try:
+        import psutil
+        result['ram_total_bytes'] = psutil.virtual_memory().total
+    except (ImportError,OSError):
+        pass
+    try:
+        flags = subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0
+        data = subprocess.run(['nvidia-smi','--query-gpu=name,memory.total,driver_version','--format=csv,noheader,nounits'],
+                              capture_output=True,text=True,timeout=3,creationflags=flags)
+        for line in data.stdout.splitlines():
+            name,memory,driver = [p.strip() for p in line.split(',')]
+            result['nvidia_devices'].append({'name':name,'vram_mib':float(memory),'driver':driver})
+    except (OSError,ValueError,subprocess.TimeoutExpired):
+        pass
+    return result
+
+
 class Metrics:
     def __init__(self,clock=time.perf_counter,collector=process_rss):
         self.clock,self.collector = clock,collector

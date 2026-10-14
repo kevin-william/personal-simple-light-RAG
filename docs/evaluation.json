@@ -2,7 +2,7 @@
   "description": "Documentação do próprio projeto; avaliação funcional local, não benchmark de documentação externa do usuário.",
   "documents": ["../README.md"],
   "questions": [
-    {"question": "Qual comando prepara o projeto para execução sem GPU?", "expected_substrings": ["cpu"]},
+    {"question": "Qual comando prepara o projeto para execução sem GPU?", "expected_substrings": ["setup.ps1", "-Profile cpu"]},
     {"question": "E como vejo os documentos indexados?", "expected_substrings": ["--list"]},
     {"question": "Qual é o telefone do suporte comercial?", "expected_substrings": []}
   ]
