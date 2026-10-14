@@ -42,3 +42,17 @@ e publica manifestos somente após sucesso. `--prepare --offline` verifica
 cache sem rede. Carregamento também verifica integridade. Pesos ficam em
 `models/llm` e `models/embeddings`; downloads interrompidos podem ser repetidos.
 Os dois repositórios publicam licença MIT. Use `--status` para ver as revisões.
+
+## Documentos suportados
+
+PDF com camada de texto, TXT e Markdown UTF-8. PDFs sem texto geram aviso
+de OCR e não são indexados vazios. Trechos preservam páginas ou linhas;
+divisão recursiva usa caracteres e overlap, sem truncamento silencioso.
+
+BGE-M3 usa normalização L2 e o mesmo processamento para perguntas/documentos.
+O limite de entrada é validado por tokens; documentos longos são redivididos.
+ChromaDB persiste vetores com cosseno explícito, sem usar encoder padrão.
+Similaridade `1 - distância` não é probabilidade ou confiança da resposta.
+Mudanças de revisão/divisão/processamento exigem uma nova base ou reset.
+O catálogo SQLite separa identidade de origem e conteúdo compartilhado e
+registra versões pending/active/failed e uma geração para invalidar memória.
