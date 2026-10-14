@@ -31,5 +31,5 @@ def reset(app,ask=input,out=console):
     if ask('Confirma limpar toda a base? Digite RESET: ').strip() != 'RESET':
         out.print('Cancelado.')
         return False
-    out.print(app.ingestor.reset(confirmed=True))
+    out.print(app.reset(confirmed=True))
     return True

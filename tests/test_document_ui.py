@@ -9,7 +9,7 @@ def test_confirmation_and_file_reports():
     calls = []
     service = SimpleNamespace(delete_source=lambda *a,**k:calls.append('delete') or {'removed':True},
         reset=lambda **k:calls.append('reset') or {})
-    app = SimpleNamespace(ingestor=service)
+    app = SimpleNamespace(ingestor=service,reset=service.reset)
     out = Console(file=StringIO(),force_terminal=False)
     assert not remove(app,'id',lambda _: 'não',out) and not calls
     assert remove(app,'id',lambda _: 'SIM',out)

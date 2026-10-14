@@ -54,6 +54,19 @@ class Application:
             self._lock.release()
             self._lock = None
 
+    def reset(self,confirmed=False):
+        if not confirmed:
+            raise ValueError('Reset exige confirmação explícita.')
+        from .rag.vectorstore import VectorStore
+        # Reset must work even when the old collection fingerprint is incompatible.
+        self.catalog.clear()
+        store = VectorStore.reset_collection(self.settings)
+        for version in self.catalog.all_versions():
+            self.catalog.forget_version(version['id'])
+        self._ingestor = None
+        self._pipeline = None
+        return {'reset':True, 'warnings':[]}
+
     @property
     def pipeline(self):
         if self._pipeline is None:

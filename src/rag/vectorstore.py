@@ -14,6 +14,18 @@ class Hit:
 
 
 class VectorStore:
+    @staticmethod
+    def reset_collection(settings):
+        import chromadb
+        from chromadb.config import Settings
+        client = chromadb.PersistentClient(path=str(settings.chroma_persist_dir),settings=Settings(anonymized_telemetry=False))
+        from chromadb.errors import NotFoundError
+        try:
+            client.delete_collection(settings.collection_name)
+        except NotFoundError:
+            pass
+        return VectorStore(settings)
+
     def __init__(self, settings):
         import chromadb
         from chromadb.config import Settings

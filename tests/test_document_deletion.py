@@ -41,3 +41,17 @@ def test_failed_cleanup_is_invisible_and_recoverable(tmp_path):
     i.store.delete_version = original
     i.recover()
     assert i.store.collection.count() == 0
+
+
+def test_reference_lookup_rejects_deleted_alias(tmp_path):
+    i = service(tmp_path)
+    a,b = tmp_path/'a.txt',tmp_path/'b.txt'
+    a.write_text('shared')
+    b.write_text('shared')
+    aid = i.ingest_file(a)['id']
+    i.ingest_file(b)
+    hit = i.query([1.,0.],1)[0]
+    ref = dict(hit.metadata,id=hit.id,citation=1,distance=hit.distance)
+    assert i.reference_hits([ref])[0].text=='shared'
+    i.delete_source(aid,True)
+    assert not i.reference_hits([ref])

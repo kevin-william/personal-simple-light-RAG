@@ -43,6 +43,12 @@ class Ingestor:
         if existing and existing['version'] == version:
             return {'path':str(path), 'status':'skipped', 'id':existing['id']}
         known = self.catalog.version(version)
+        if known and known['state'] == 'active' and self.store.count_version(version) != known['expected']:
+            if version in self.catalog.active_versions():
+                raise RuntimeError('Versão ativa inconsistente; preserve a base e reimporte em nova coleção.')
+            self.store.delete_version(version)
+            self.catalog.forget_version(version)
+            known = None
         if known and known['state'] == 'active':
             identifier = self.catalog.activate(version,path)
             issues = self.recover()
@@ -96,6 +102,23 @@ class Ingestor:
                 hit.metadata = dict(hit.metadata, source=aliases[0]['path'], document_id=aliases[0]['id'])
                 hit.metadata['aliases'] = [s['path'] for s in aliases]
         return hits
+
+    def reference_hits(self,references):
+        from .vectorstore import Hit
+        active = self.catalog.active_versions()
+        live_sources = {s['id']:s for s in self.catalog.list_sources()}
+        result = []
+        for reference in references:
+            if reference.get('version') not in active:
+                continue
+            live = live_sources.get(reference.get('document_id'))
+            if not live or live['version'] != reference['version']:
+                continue
+            record = self.store.collection.get(ids=[reference['id']],include=['documents','metadatas'])
+            if record['ids']:
+                meta = dict(record['metadatas'][0],source=reference['source'],citation=reference['citation'])
+                result.append(Hit(reference['id'],record['documents'][0],meta,reference.get('distance',0.)))
+        return result
 
     def delete_source(self, identifier, confirmed=False):
         if not confirmed:

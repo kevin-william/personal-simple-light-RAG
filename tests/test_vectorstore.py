@@ -18,3 +18,5 @@ def test_cosine_active_filter_persistence(tmp_path):
     assert not store.query([1.,0.],4,{'active'})
     with pytest.raises(ValueError, match='incompatível'):
         VectorStore(Settings(root=tmp_path, chunk_size_chars=900, _env_file=None))
+    changed = Settings(root=tmp_path,chunk_size_chars=900,_env_file=None)
+    assert VectorStore.reset_collection(changed).collection.count() == 0
