@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ROOT / '.env', extra='ignore', case_sensitive=False)
+    model_config = SettingsConfigDict(env_file=ROOT / '.env',env_file_encoding='utf-8', extra='ignore', case_sensitive=False)
     root: Path = ROOT
     model_repo_id: str = 'unsloth/Phi-4-mini-instruct-GGUF'
     model_filename: str = 'Phi-4-mini-instruct.Q8_0.gguf'
@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     llm_backend: Literal['cuda', 'cpu'] = 'cuda'
     embedding_device: Literal['cuda', 'cpu'] = 'cuda'
     n_gpu_layers: int = Field(-1, ge=-1)
+    llm_batch_size: int = Field(128, gt=0)
     context_size: int = Field(4096, ge=512)
     max_response_tokens: int = Field(512, gt=0)
     chunk_size_chars: int = Field(800, gt=0)
@@ -68,4 +69,12 @@ class Settings(BaseSettings):
 def load_settings(profile=None, **overrides):
     if profile == 'cpu':
         overrides.update(llm_backend='cpu', embedding_device='cpu', n_gpu_layers=0)
+    elif profile == 'cuda':
+        import os
+        from dotenv import dotenv_values
+        env_file = overrides.get('_env_file',ROOT/'.env')
+        values = {k.lower():v for k,v in dotenv_values(env_file).items()} if env_file else {}
+        values.update({k.lower():v for k,v in os.environ.items()})
+        layers = overrides.get('n_gpu_layers',values.get('n_gpu_layers',-1))
+        overrides.update(llm_backend='cuda',embedding_device='cuda',n_gpu_layers=-1 if int(layers)==0 else int(layers))
     return Settings(**overrides)

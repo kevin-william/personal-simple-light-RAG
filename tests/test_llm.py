@@ -1,5 +1,5 @@
 from src.config import Settings
-from src.models.llm import LLM,serialize
+from src.models.llm import LLM,serialize,native_schema
 import pytest
 
 
@@ -37,3 +37,11 @@ def test_no_silent_prompt_truncation():
     llm = LLM(Settings(_env_file=None),FakeModel)
     with pytest.raises(ValueError,match='longa'):
         llm.complete([{'role':'user','content':'word '*4096}])
+
+
+def test_native_grammar_keeps_types_without_expanding_string_bounds():
+    original = {'properties':{'query':{'type':'string','maxLength':1600,'minLength':1}},'additionalProperties':False}
+    converted = native_schema(original)
+    assert converted['properties']['query']=={'type':'string','minLength':1}
+    assert original['properties']['query']['maxLength']==1600
+    assert converted['additionalProperties'] is False

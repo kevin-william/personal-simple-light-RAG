@@ -1,7 +1,24 @@
 import importlib
+import importlib.util
+import os
+from pathlib import Path
+
+_dll_handles = []
+
+
+def configure_windows_dlls():
+    if os.name != 'nt' or _dll_handles:
+        return
+    spec = importlib.util.find_spec('torch')
+    if spec and spec.origin:
+        library = Path(spec.origin).parent / 'lib'
+        if library.is_dir():
+            _dll_handles.append(os.add_dll_directory(str(library)))
+            os.environ['PATH'] = str(library) + os.pathsep + os.environ.get('PATH','')
 
 
 def diagnostic(importer=importlib.import_module):
+    configure_windows_dlls()
     result = {'torch_cuda': False, 'llama_gpu_support': False, 'offload_effective': None}
     for module in ('torch', 'llama_cpp'):
         try:

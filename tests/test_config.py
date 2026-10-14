@@ -23,3 +23,11 @@ def test_status_is_lazy(tmp_path):
     assert str(ROOT).replace('\\', '\\\\') in result.stdout
     code = 'from src.cli import main; main(["--status"]); import sys; assert "torch" not in sys.modules'
     assert subprocess.run([sys.executable, '-c', code], cwd=ROOT, capture_output=True).returncode == 0
+
+
+def test_explicit_cuda_profile_preserves_partial_offload(monkeypatch):
+    monkeypatch.setenv('LLM_BACKEND','cpu')
+    monkeypatch.setenv('N_GPU_LAYERS','0')
+    assert load_settings('cuda',_env_file=None).n_gpu_layers==-1
+    monkeypatch.setenv('N_GPU_LAYERS','12')
+    assert load_settings('cuda',_env_file=None).n_gpu_layers==12

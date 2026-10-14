@@ -1,4 +1,4 @@
-param(
+﻿param(
     [ValidateSet('cuda', 'cpu')][string]$Profile = 'cuda',
     [switch]$SkipModels
 )
@@ -24,11 +24,17 @@ $torchIndex = if ($Profile -eq 'cuda') { 'https://download.pytorch.org/whl/cu124
 $torchVersion = if ($Profile -eq 'cuda') { '2.6.0+cu124' } else { '2.6.0+cpu' }
 & $pythonExe -m pip install --only-binary=:all: "torch==$torchVersion" --index-url $torchIndex
 if ($LASTEXITCODE -ne 0) { throw 'Wheel PyTorch indisponível; não compilar nem trocar perfil automaticamente.' }
-$llamaVersion = if ($Profile -eq 'cuda') { '0.3.4' } else { '0.3.19' }
+$llamaVersion = if ($Profile -eq 'cuda') { '0.3.36' } else { '0.3.19' }
 $llamaIndex = if ($Profile -eq 'cuda') { 'https://abetlen.github.io/llama-cpp-python/whl/cu124' } else { 'https://abetlen.github.io/llama-cpp-python/whl/cpu' }
-& $pythonExe -m pip install --only-binary=:all: "llama-cpp-python==$llamaVersion" --extra-index-url $llamaIndex
+if ($Profile -eq 'cuda') {
+    # Modern upstream CUDA wheels use py3-none, not cp312. Pin backend and asset digest.
+    $llamaWheel = 'https://github.com/abetlen/llama-cpp-python/releases/download/v0.3.36-cu124/llama_cpp_python-0.3.36-py3-none-win_amd64.whl#sha256=7086b98420cf9cca5e3f14181edc4332038bfb0a0e380370a693806bb527911f'
+    & $pythonExe -m pip install --only-binary=:all: $llamaWheel
+} else {
+    & $pythonExe -m pip install --only-binary=:all: "llama-cpp-python==$llamaVersion" --extra-index-url $llamaIndex
+}
 if ($LASTEXITCODE -ne 0) { throw 'Wheel llama.cpp indisponível; instalação interrompida sem compilação C++.' }
-& $pythonExe -m pip install --only-binary=:all: -r (Join-Path $projectRoot 'requirements-models.txt') pytest==8.4.2
+& $pythonExe -m pip install --only-binary=:all: -r (Join-Path $projectRoot 'requirements-models.txt') -c (Join-Path $projectRoot 'requirements-lock.txt') pytest==8.4.2
 if ($LASTEXITCODE -ne 0) { throw 'Falha nas dependências.' }
 & $pythonExe -m pip install --no-deps -e $projectRoot
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao registrar CLI.' }

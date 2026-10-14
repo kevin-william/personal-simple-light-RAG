@@ -2,6 +2,7 @@ from pathlib import Path
 from hashlib import sha256
 import json
 import os
+import re
 
 
 def digest(path):
@@ -31,13 +32,19 @@ class ModelCache:
         if not manifest.is_file():
             raise RuntimeError(f'Cache {kind} ausente/incompleto. Execute --prepare.')
         data = json.loads(manifest.read_text(encoding='utf-8'))
+        if not isinstance(data,dict) or not all(key in data for key in ('repo','revision','files')) or not isinstance(data['files'],dict):
+            raise RuntimeError(f'Manifesto {kind} inválido. Execute --prepare.')
         repo, revision = self.spec(kind)
         if data['repo'] != repo or data['revision'] != revision:
             raise RuntimeError(f'Revisão do cache {kind} incompatível. Execute --prepare.')
-        required = [self.settings.model_filename] if kind == 'llm' else ['model.safetensors', 'tokenizer.json', 'modules.json', 'config.json']
+        required = [self.settings.model_filename] if kind == 'llm' else ['tokenizer.json', 'modules.json', 'config.json']
         if not all(name in data['files'] for name in required):
             raise RuntimeError(f'Manifesto {kind} incompleto.')
+        if kind == 'embeddings' and not any(name in data['files'] for name in ('model.safetensors','pytorch_model.bin')):
+            raise RuntimeError('Manifesto embeddings sem pesos.')
         for name, info in data['files'].items():
+            if not isinstance(name,str) or not isinstance(info,dict) or type(info.get('size')) is not int or info['size']<0 or not re.fullmatch(r'[0-9a-f]{64}',str(info.get('sha256',''))):
+                raise RuntimeError(f'Manifesto {kind} contém registro inválido. Execute --prepare.')
             path = (directory / name).resolve()
             if not path.is_relative_to(directory.resolve()) or not path.is_file():
                 raise RuntimeError(f'Artefato {kind} ausente ou caminho inválido: {name}')
@@ -67,7 +74,7 @@ class ModelCache:
             hub.hf_hub_download(repo_id=repo, filename=self.settings.model_filename, revision=revision, local_dir=directory)
         else:
             hub.snapshot_download(repo_id=repo, revision=revision, local_dir=directory,
-                                  allow_patterns=['*.json', '*.txt', '*.model', '*.safetensors', '1_Pooling/*.json'])
+                                  allow_patterns=['*.json', '*.txt', '*.model', 'model.safetensors', 'pytorch_model.bin', '1_Pooling/*.json'])
         remote = hub.HfApi().model_info(repo, revision=revision, files_metadata=True)
         siblings = {x.rfilename: x for x in remote.siblings}
         files = {}
