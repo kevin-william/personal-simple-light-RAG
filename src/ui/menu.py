@@ -6,7 +6,7 @@ def menu(app,ask=input,out=console):
     while True:
         out.print('\n[bold]Personal Simple Light RAG[/bold]\n'
                   '1. Chat com documentos\n2. Adicionar/atualizar arquivo ou pasta\n3. Listar documentos\n'
-                  '4. Remover origem\n5. Resetar base\n6. Configuração/hardware\n0. Sair')
+                  '4. Remover origem\n5. Resetar base\n6. Configuração/hardware\n7. Interface TUI moderna (Textual)\n0. Sair')
         try:
             choice = ask('Opção: ').strip()
             if choice == '0':
@@ -24,10 +24,14 @@ def menu(app,ask=input,out=console):
             elif choice == '5':
                 reset(app,ask,out)
             elif choice == '6':
-                from ..models.hardware import diagnostic
+                from ..models.hardware import diagnostic, get_resource_snapshot
                 out.print(app.settings.model_dump(mode='json'))
                 out.print(diagnostic())
                 out.print({'llm_offload_observed':app.llm.offload_effective})
+                out.print({'telemetry': get_resource_snapshot()})
+            elif choice == '7':
+                from .tui import RagTuiApp
+                RagTuiApp(app).run()
             else:
                 out.print('Opção inválida.')
         except (EOFError,KeyboardInterrupt):

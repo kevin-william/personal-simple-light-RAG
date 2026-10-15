@@ -22,6 +22,7 @@ def main(argv=None):
     parser.add_argument('--data-dir', help='Diretório isolado para a base')
     parser.add_argument('--ask', metavar='PERGUNTA', help='Consulta única em streaming')
     parser.add_argument('--sources', action='store_true')
+    parser.add_argument('--tui', action='store_true', help='Inicia a interface de terminal moderna (TUI Textual)')
     args = parser.parse_args(argv)
     try:
         from pathlib import Path
@@ -56,6 +57,10 @@ def main(argv=None):
             if args.ask:
                 from .ui.chat import respond
                 return 0 if respond(app,args.ask,details=args.sources) is not None else 1
+            if args.tui:
+                from .ui.tui import RagTuiApp
+                RagTuiApp(app).run()
+                return 0
             if args.list:
                 show_documents(app.catalog.list_sources())
             elif args.delete:

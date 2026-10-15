@@ -7,7 +7,7 @@ name = "personal-simple-light-rag"
 version = "0.1.0"
 description = "Local document RAG with Phi-4-mini, BGE-M3 and ChromaDB"
 requires-python = ">=3.12,<3.13"
-dependencies = ["pydantic-settings==2.10.1", "rich==14.1.0", "prompt-toolkit==3.0.52"]
+dependencies = ["pydantic-settings==2.10.1", "rich>=14.1.0", "prompt-toolkit==3.0.52", "textual>=8.0.0", "psutil>=5.9.0"]
 
 [project.scripts]
 light-rag = "src.cli:main"
