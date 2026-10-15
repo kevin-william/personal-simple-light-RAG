@@ -1,11 +1,45 @@
+# Ambientes virtuais
 .venv*/
+venv/
+env/
+
+# Python cache & bytecode
 __pycache__/
 *.py[cod]
-.pytest_cache/
+*$py.class
+
+# Configurações e variáveis de ambiente locais
 .env
+.env.local
+.env.*.local
+
+# Dados de runtime, modelos e persistência
 /data/
 /models/
 /work/
-*.egg-info/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs e arquivos temporários
+*.log
+*.tmp
+
+# Caches e relatórios de testes
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Builds e empacotamento
 build/
 dist/
+*.egg-info/
+
+# IDEs e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Documentação, relatórios e artefatos não indispensáveis para execução
+docs/
