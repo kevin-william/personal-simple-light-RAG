@@ -93,9 +93,14 @@ class Ingestor:
                 progress(i,len(paths),result)
         return results
 
-    def query(self, vector, k):
-        hits = self.store.query(vector,k,self.catalog.active_versions())
+    def query(self, vector, k, source_ids=None):
+        active = self.catalog.active_versions()
         sources = self.catalog.list_sources()
+        if source_ids is not None:
+            allowed_sources = set(source_ids)
+            allowed_versions = {s['version'] for s in sources if s['id'] in allowed_sources}
+            active = active.intersection(allowed_versions)
+        hits = self.store.query(vector,k,active)
         for hit in hits:
             aliases = [s for s in sources if s['version'] == hit.metadata['version']]
             if aliases:

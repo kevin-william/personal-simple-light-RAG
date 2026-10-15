@@ -53,9 +53,9 @@ class Pipeline:
         self.memory.clear()
         self.last_result = Answer()
 
-    def stream(self,question):
+    def stream(self,question,source_ids=None):
         self.metrics.start()
-        iterator = self._stream(question)
+        iterator = self._stream(question,source_ids=source_ids)
         try:
             for token in iterator:
                 self.metrics.mark_token()
@@ -108,7 +108,7 @@ class Pipeline:
                     selected.append(replace(hit,text=hit.text[:lo],metadata=dict(hit.metadata,excerpt_truncated=True)))
         return self.messages(question,resolution,selected,transform),selected
 
-    def _stream(self, question):
+    def _stream(self, question, source_ids=None):
         self.last_result = result = Answer()
         generation = self.ingestor.catalog.generation
         self.memory.sync(generation)
@@ -125,7 +125,7 @@ class Pipeline:
             with self.metrics.phase('query_embedding'):
                 vector = self.embedder.encode([resolution.standalone_query])[0]
             with self.metrics.phase('search'):
-                result.candidates = self.ingestor.query(vector,self.settings.top_k)
+                result.candidates = self.ingestor.query(vector,self.settings.top_k,source_ids)
             if not result.candidates:
                 result.mode = 'no_evidence'
                 result.text = 'Não encontrei informações suficientes nos documentos indexados.'
