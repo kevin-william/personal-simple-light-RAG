@@ -20,3 +20,21 @@ def test_empty_base_does_not_load_model():
     app = SimpleNamespace(catalog=SimpleNamespace(list_sources=lambda:[]))
     assert respond(app,'q',Console(file=output)) is None
     assert 'Base vazia' in output.getvalue()
+
+
+def test_default_ask_fallback_on_console_buffer_error(monkeypatch):
+    from src.ui.chat import _default_ask
+
+    class BrokenSession:
+        def prompt(self, label):
+            from prompt_toolkit.output.win32 import NoConsoleScreenBufferError
+            raise NoConsoleScreenBufferError()
+
+    class FakePromptToolkit:
+        PromptSession = BrokenSession
+
+    monkeypatch.setattr('sys.modules', {**__import__('sys').modules, 'prompt_toolkit': FakePromptToolkit})
+    monkeypatch.setattr('builtins.input', lambda prompt: 'fallback answer')
+
+    ask = _default_ask()
+    assert ask('Você > ') == 'fallback answer'

@@ -66,6 +66,9 @@ class LLM:
         configure_windows_dlls()
         try:
             import llama_cpp
+            if hasattr(llama_cpp, '_utils') and hasattr(llama_cpp._utils, 'suppress_stdout_stderr'):
+                llama_cpp._utils.suppress_stdout_stderr.__enter__ = lambda self: self
+                llama_cpp._utils.suppress_stdout_stderr.__exit__ = lambda self, *args: None
         except (ImportError,OSError,RuntimeError) as error:
             raise RuntimeError('Bibliotecas nativas indisponíveis. Execute scripts/setup.ps1 para o perfil escolhido; não é necessário compilar C++. '+str(error)) from error
         from llama_cpp.llama_chat_format import ChatFormatterResponse, chat_formatter_to_chat_completion_handler

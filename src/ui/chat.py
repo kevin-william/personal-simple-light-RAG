@@ -27,11 +27,23 @@ def respond(app,question,out=console,details=False):
     return answer
 
 
-def chat(app,ask=None,out=console):
-    if ask is None:
+def _default_ask():
+    try:
         from prompt_toolkit import PromptSession
         session = PromptSession()
-        ask = lambda label: session.prompt(label)
+        def _ask(label):
+            try:
+                return session.prompt(label)
+            except Exception:
+                return input(label)
+        return _ask
+    except Exception:
+        return input
+
+
+def chat(app,ask=None,out=console):
+    if ask is None:
+        ask = _default_ask()
     details = False
     out.print('Chat: /clear limpa memória; /sources alterna fontes; /exit volta ao menu.')
     while True:
@@ -59,3 +71,5 @@ def chat(app,ask=None,out=console):
             out.print('\nResposta cancelada. /exit para sair.')
         except (ValueError,RuntimeError,OSError) as error:
             out.print(str(error),style='red',markup=False)
+        except Exception as error:
+            out.print(f'Erro no chat: {error}',style='red',markup=False)
