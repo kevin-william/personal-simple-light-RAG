@@ -58,6 +58,11 @@ class Metrics:
     def reset(self):
         self.durations = {}
         self.started = self.first_token = self.generation_started = self.generation_finished = None
+        self.first_model_delivery = self.last_model_delivery = None
+        self.first_model_fragment = ''
+        self.delivery_gaps = []
+        self.llm_calls = 0
+        self.model_events = []
         self.peak_rss = None
         self._stop = threading.Event()
         self._thread = None
@@ -93,18 +98,35 @@ class Metrics:
         if self.first_token is None:
             self.first_token = self.clock()
 
-    def finish(self,token_count=0):
+    def mark_model_fragment(self, text):
+        now = self.clock()
+        if self.first_model_delivery is None:
+            self.first_model_delivery = now
+            self.first_model_fragment = text
+        if self.last_model_delivery is not None:
+            self.delivery_gaps.append(max(0.,now-self.last_model_delivery))
+        self.last_model_delivery = now
+
+    def finish(self,token_count=0,first_fragment_tokens=0):
         ended = self.clock()
         self._stop.set()
         if self._thread:
             self._thread.join(timeout=.3)
         self.sample()
         generation_seconds = (self.generation_finished-self.generation_started) if self.generation_finished is not None else None
+        delivery_seconds = (self.last_model_delivery-self.first_model_delivery
+                            if self.first_model_delivery is not None else None)
+        import statistics
         return {'total_seconds':max(0.,ended-self.started) if self.started is not None else None,
                 'ttft_seconds':max(0.,self.first_token-self.started) if self.first_token is not None and self.started is not None else None,
                 'generation_seconds':generation_seconds,
                 'generated_tokens':token_count,
                 'tokens_per_second':token_count/generation_seconds if generation_seconds and generation_seconds>0 else None,
+                'delivery_seconds':delivery_seconds,
+                'delivery_tokens_per_second_estimate':max(0,token_count-first_fragment_tokens)/delivery_seconds if delivery_seconds else None,
+                'median_delivery_gap_seconds':statistics.median(self.delivery_gaps) if self.delivery_gaps else None,
+                'max_delivery_gap_seconds':max(self.delivery_gaps) if self.delivery_gaps else None,
+                'llm_calls':self.llm_calls, 'model_events':list(self.model_events),
                 'phase_seconds':dict(self.durations), 'peak_rss_bytes':self.peak_rss,
                 'process_vram_mib_at_end':gpu_memory()}
 

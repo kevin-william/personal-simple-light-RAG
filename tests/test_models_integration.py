@@ -13,7 +13,7 @@ def test_real_embeddings_and_phi_offline(request):
     ModelCache(s).prepare('llm',offline=True)
     ModelCache(s).prepare('embeddings',offline=True)
     llm,embedder = LLM(s),Embedder(s)
-    cycle = ModelLifecycle(llm,embedder,'alternating')
+    cycle = ModelLifecycle(llm,embedder,s.memory_mode)
     try:
         vectors = embedder.encode(['Como configurar autenticação OAuth2?','Como configurar autenticação OAuth2?'])
         assert len(vectors[0]) == 1024
@@ -22,7 +22,7 @@ def test_real_embeddings_and_phi_offline(request):
         result = ''.join(llm.stream([{'role':'user','content':'Responda apenas com a palavra OK.'}],max_tokens=16))
         assert 'OK' in result.upper()
         assert '<|end|>' not in result and '<|assistant|>' not in result
-        assert embedder.model is None
+        assert (embedder.model is None) == (s.memory_mode=='alternating')
         if s.llm_backend == 'cuda':
             assert llm.offload_effective and llm.offload_effective['layers'] > 0
         else:

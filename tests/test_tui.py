@@ -121,3 +121,121 @@ def test_catalog_thread_safety(tmp_path):
     t.join()
     assert not errors
     assert result == [1]
+
+
+@pytest.mark.anyio
+async def test_tui_coalesces_and_preserves_empty_selection(tmp_path):
+    import asyncio
+    pipeline=build(tmp_path)
+    seen=[]
+    original=pipeline.stream
+    def observed(question,source_ids=None):
+        seen.append(source_ids)
+        yield from original(question,source_ids)
+    pipeline.stream=observed
+    def fast(messages):
+        for _ in range(1500):
+            yield 'abc '
+    pipeline.llm.stream=fast
+    rag=SimpleNamespace(pipeline=pipeline,catalog=SimpleNamespace(list_sources=lambda:[{'id':'s','path':'doc.txt','chunks':1}]))
+    app=RagTuiApp(rag)
+    updates=[]
+    update=app.update_chat_message
+    def track(widget,text):
+        updates.append(text)
+        update(widget,text)
+    app.update_chat_message=track
+    async with app.run_test(size=(140,50)):
+        app.query_one('#prompt-input',Input).value='q'
+        app.submit_prompt()
+        assert app.query_one('#add-doc-btn',Button).disabled
+        for _ in range(200):
+            await asyncio.sleep(.01)
+            if not app.is_generating:
+                break
+        assert not app.is_generating
+        assert 'abc '*1500 in updates[-1]
+        assert len(updates)<20  # Not 1500 synchronous main-thread callbacks.
+        assert not app.query_one('#add-doc-btn',Button).disabled
+        selection=app.query_one('#doc-selection-list',SelectionList)
+        selection.deselect_all()
+        app.query_one('#prompt-input',Input).value='q'
+        app.submit_prompt()
+        for _ in range(200):
+            await asyncio.sleep(.01)
+            if not app.is_generating:
+                break
+        assert seen[-1]==[]
+        assert pipeline.last_result.mode=='no_evidence'
+        assert pipeline.last_result.metrics['llm_calls']==0
+
+
+@pytest.mark.anyio
+async def test_tui_cancel_closes_generation_and_restores_controls(tmp_path):
+    import asyncio
+    import time
+    pipeline=build(tmp_path)
+    closed=[]
+    def slow(messages):
+        try:
+            for _ in range(100):
+                time.sleep(.01)
+                yield 'parcial '
+        finally:
+            closed.append(True)
+    pipeline.llm.stream=slow
+    rag=SimpleNamespace(pipeline=pipeline,catalog=SimpleNamespace(list_sources=lambda:[{'id':'s','path':'doc.txt','chunks':1}]))
+    app=RagTuiApp(rag)
+    async with app.run_test(size=(140,50)):
+        app.query_one('#prompt-input',Input).value='q'
+        app.submit_prompt()
+        await asyncio.sleep(.06)
+        app.action_cancel_response()
+        for _ in range(200):
+            await asyncio.sleep(.01)
+            if not app.is_generating:
+                break
+        assert closed and not app.is_generating
+        assert not app.query_one('#prompt-input',Input).disabled
+        assert pipeline.last_result.warnings==['Resposta interrompida.']
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize('failed',[True,False])
+async def test_ingestion_modal_restores_controls(tmp_path,monkeypatch,failed):
+    import asyncio
+    from threading import Event
+    from src.ui.tui import AddDocumentModal
+    from textual.widgets import Label
+    entered,release=Event(),Event()
+    def ingest(*args,**kwargs):
+        entered.set()
+        assert release.wait(timeout=5)
+        return [{'status':'failed' if failed else 'added','path':'bad.txt','error':'test failure'}]
+    monkeypatch.setattr('src.ui.ingestion.ingest',ingest)
+    rag=SimpleNamespace(pipeline=build(tmp_path),catalog=SimpleNamespace(list_sources=lambda:[]))
+    app=RagTuiApp(rag)
+    async with app.run_test(size=(140,50)) as pilot:
+        await pilot.click('#add-doc-btn')
+        modal=app.screen
+        assert isinstance(modal,AddDocumentModal)
+        modal.query_one('#modal-input',Input).value='bad.txt'
+        modal.query_one('#modal-ingest-btn',Button).press()
+        for _ in range(200):
+            if entered.is_set():
+                break
+            await asyncio.sleep(.01)
+        assert entered.is_set() and app.is_ingesting
+        assert app._prompt_input.disabled
+        release.set()
+        for _ in range(200):
+            await asyncio.sleep(.01)
+            if not app.is_ingesting:
+                break
+        assert not app.is_ingesting
+        assert not app._prompt_input.disabled
+        if failed:
+            assert not modal.query_one('#modal-ingest-btn',Button).disabled
+            assert 'test failure' in str(modal.query_one('#modal-status',Label).render())
+        else:
+            assert not isinstance(app.screen,AddDocumentModal)

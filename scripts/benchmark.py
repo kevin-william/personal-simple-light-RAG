@@ -32,7 +32,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--corpus',type=Path,required=True,help='JSON: documents, questions; paths relativos ao manifesto')
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--profile',choices=['cuda','cpu'],default='cuda')
+    parser.add_argument('--profile',choices=['mixed','cuda','cpu'],default='mixed')
     parser.add_argument('--mode',choices=['resident','alternating'],default='resident')
     parser.add_argument('--runs',type=int,default=2)
     parser.add_argument('--data-dir',type=Path,required=True,help='Base exclusiva do benchmark')
@@ -62,13 +62,14 @@ def main(argv=None):
         if any(r['status']=='failed' for r in imports):
             raise RuntimeError('Ingestão do corpus falhou; benchmark inválido.')
         for run in range(args.runs):
-            app.pipeline.memory.clear()
+            app.pipeline.clear_memory()
             for number,query in enumerate(manifest['questions']):
                 list(app.pipeline.stream(query['question']))
                 item = record(query['question'],app.pipeline.last_result,query.get('expected_substrings',()),args.include_text)
                 item.update(run=run+1,question_index=number,cold_start=run==0 and number==0)
                 report['records'].append(item)
         report['offload_observed'] = app.llm.offload_effective
+        report['model_events'] = list(app.lifecycle.events)
     except Exception as error:
         report['error'] = str(error) if args.include_text else type(error).__name__+': execução falhou; detalhes somente com --include-text.'
     finally:
