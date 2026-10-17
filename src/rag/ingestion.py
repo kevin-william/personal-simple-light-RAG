@@ -5,12 +5,15 @@ from .loaders import discover, load_file
 from .splitter import split_documents
 from ..models.downloader import digest
 from ..metrics import measured
+from ..operations import OperationGate,exclusive
 
 
 class Ingestor:
-    def __init__(self, settings, catalog, store, embedder):
+    def __init__(self, settings, catalog, store, embedder, operations=None):
         self.settings, self.catalog, self.store, self.embedder = settings, catalog, store, embedder
+        self.operations = operations or OperationGate()
 
+    @exclusive
     def recover(self):
         active = self.catalog.active_versions()
         issues = []
@@ -31,6 +34,7 @@ class Ingestor:
                 issues.append(f'Vetores órfãos: {error}')
         return issues
 
+    @exclusive
     @measured('indexing')
     def ingest_file(self, path):
         path = Path(path).resolve()
@@ -78,6 +82,7 @@ class Ingestor:
         issues = self.recover()
         return {'path':str(path),'status':'updated' if existing else 'added','id':identifier,'chunks':len(chunks),'warnings':issues}
 
+    @exclusive
     def ingest_path(self, path, progress=None):
         paths = discover(path)
         results = []
@@ -93,6 +98,7 @@ class Ingestor:
                 progress(i,len(paths),result)
         return results
 
+    @exclusive(read=True)
     def query(self, vector, k, source_ids=None):
         active = self.catalog.active_versions()
         sources = self.catalog.list_sources()
@@ -125,12 +131,14 @@ class Ingestor:
                 result.append(Hit(reference['id'],record['documents'][0],meta,reference.get('distance',0.)))
         return result
 
+    @exclusive
     def delete_source(self, identifier, confirmed=False):
         if not confirmed:
             raise ValueError('Exclusão exige confirmação explícita.')
         removed = self.catalog.remove_source(identifier)
         return {'removed':removed, 'warnings':self.recover()}
 
+    @exclusive
     def reset(self, confirmed=False):
         if not confirmed:
             raise ValueError('Reset exige confirmação explícita.')
