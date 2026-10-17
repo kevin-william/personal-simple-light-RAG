@@ -17,7 +17,7 @@ def configure_windows_dlls():
             os.environ['PATH'] = str(library) + os.pathsep + os.environ.get('PATH','')
 
 
-def diagnostic(importer=importlib.import_module):
+def diagnostic(importer=importlib.import_module, settings=None):
     configure_windows_dlls()
     result = {'torch_cuda': False, 'llama_gpu_support': False, 'offload_effective': None}
     for module in ('torch', 'llama_cpp'):
@@ -34,6 +34,10 @@ def diagnostic(importer=importlib.import_module):
         except (ImportError, OSError, RuntimeError) as error:
             result[module + '_error'] = str(error)
     result['cuda_ready'] = result['torch_cuda'] and result['llama_gpu_support']
+    if settings is not None:
+        result['profile_ready'] = ((settings.llm_backend == 'cpu' or result['llama_gpu_support']) and
+                                   (settings.embedding_device == 'cpu' or result['torch_cuda']))
+        result['devices'] = {'llm':settings.llm_backend,'embeddings':settings.embedding_device}
     result['note'] = 'Offload efetivo só é verificado durante carregamento. Use --profile cpu se CUDA não estiver disponível.'
     return result
 

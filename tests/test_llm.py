@@ -45,3 +45,24 @@ def test_native_grammar_keeps_types_without_expanding_string_bounds():
     assert converted['properties']['query']=={'type':'string','minLength':1}
     assert original['properties']['query']['maxLength']==1600
     assert converted['additionalProperties'] is False
+
+
+def test_cuda_cannot_silently_load_without_confirmed_offload(tmp_path,monkeypatch):
+    from types import SimpleNamespace
+    import sys
+    model=SimpleNamespace(metadata={},closed=False)
+    markers=[b'<|system|>',b'<|user|>',b'<|assistant|>',b'<|end|>']
+    model.tokenize=lambda text,**kwargs:[markers.index(text)]
+    model.close=lambda:setattr(model,'closed',True)
+    module=SimpleNamespace(Llama=lambda **kwargs:model,llama_log_callback=lambda f:f,llama_log_set=lambda *a:None)
+    monkeypatch.setitem(sys.modules,'llama_cpp',module)
+    monkeypatch.setitem(sys.modules,'llama_cpp.llama_chat_format',SimpleNamespace(
+        ChatFormatterResponse=object,chat_formatter_to_chat_completion_handler=lambda f:f))
+    monkeypatch.setattr('src.models.llm.require_device',lambda *a:None)
+    monkeypatch.setattr('src.models.llm.configure_windows_dlls',lambda:None)
+    monkeypatch.setattr('src.models.llm.ModelCache.verify',lambda *a,**kwargs:tmp_path)
+    llm=LLM(Settings(_env_file=None))
+    with pytest.raises(RuntimeError,match='offload'):
+        llm.load()
+    assert model.closed and llm.model is None
+    assert llm.settings.llm_backend=='cuda'

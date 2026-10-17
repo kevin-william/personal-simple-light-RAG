@@ -27,15 +27,19 @@ class Embedder:
             directory = cache.verify('embeddings', full=not self.verified)
             self.verified = True
             from sentence_transformers import SentenceTransformer
-            self.model = SentenceTransformer(str(directory), device=self.settings.embedding_device, local_files_only=True)
-            self.model.max_seq_length = self.settings.embedding_max_tokens
+            try:
+                self.model = SentenceTransformer(str(directory), device=self.settings.embedding_device, local_files_only=True)
+                self.model.max_seq_length = self.settings.embedding_max_tokens
+            except (RuntimeError,MemoryError) as error:
+                self.unload()
+                raise RuntimeError(f'Falha ao carregar BGE-M3 em {self.settings.embedding_device}. Libere memória ou selecione --profile cpu. '+str(error)) from error
         return self.model
 
     def unload(self):
         self.model = None
         gc.collect()
         import sys
-        if 'torch' in sys.modules and sys.modules['torch'].cuda.is_available():
+        if self.settings.embedding_device == 'cuda' and 'torch' in sys.modules and sys.modules['torch'].cuda.is_available():
             sys.modules['torch'].cuda.empty_cache()
 
     def length(self, text):

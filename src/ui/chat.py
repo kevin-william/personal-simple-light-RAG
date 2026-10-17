@@ -1,7 +1,8 @@
 from rich.live import Live
 from rich.markdown import Markdown
 from rich.text import Text
-from .console import console,show_sources
+import time
+from .console import console,show_sources,format_metrics
 
 
 def respond(app,question,out=console,details=False):
@@ -11,13 +12,21 @@ def respond(app,question,out=console,details=False):
     stream = app.pipeline.stream(question)
     text = ''
     try:
-        with Live(Text('Resolvendo pergunta e buscando evidências…'),console=out,refresh_per_second=8) as live:
-            for token in stream:
-                text += token
-                live.update(Markdown(text))
+        with Live(Text('Buscando evidências…'),console=out,refresh_per_second=10) as live:
+            last_render = time.monotonic()
+            try:
+                for token in stream:
+                    text += token
+                    now = time.monotonic()
+                    if now-last_render >= .1:
+                        live.update(Markdown(text))
+                        last_render = now
+            finally:
+                live.update(Markdown(text),refresh=True)
     finally:
         stream.close()
     answer = app.pipeline.last_result
+    out.print(format_metrics(answer.metrics),style='dim',markup=False)
     for warning in answer.warnings:
         out.print(warning,style='yellow',markup=False)
     if details:
@@ -45,7 +54,7 @@ def chat(app,ask=None,out=console):
     if ask is None:
         ask = _default_ask()
     details = False
-    out.print('Chat: /clear limpa memória; /sources alterna fontes; /exit volta ao menu.')
+    out.print('Consultas independentes, sem histórico. /clear limpa o último resultado; /sources alterna fontes; /exit volta ao menu.')
     while True:
         try:
             question = ask('Você > ').strip()
@@ -56,7 +65,7 @@ def chat(app,ask=None,out=console):
             if question == '/clear':
                 if app._pipeline:
                     app.pipeline.clear_memory()
-                out.print('Memória limpa.')
+                out.print('Último resultado limpo.')
             elif question == '/sources':
                 details = not details
                 if app._pipeline:
