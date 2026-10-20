@@ -9,7 +9,7 @@ def main(argv=None):
         if hasattr(stream,'reconfigure'):
             stream.reconfigure(encoding='utf-8')
     parser = argparse.ArgumentParser(description='Chat local com seus documentos')
-    parser.add_argument('--profile', choices=['cuda', 'cpu'])
+    parser.add_argument('--profile', choices=['mixed', 'cuda', 'cpu'])
     parser.add_argument('--status', action='store_true')
     parser.add_argument('--diagnose', action='store_true')
     parser.add_argument('--prepare', action='store_true')
@@ -40,11 +40,11 @@ def main(argv=None):
             return 0
         if args.diagnose:
             from .models.hardware import diagnostic
-            report = diagnostic()
+            report = diagnostic(settings=settings)
             print(json.dumps(report, ensure_ascii=False, indent=2))
-            return 0 if settings.llm_backend == 'cpu' or report['cuda_ready'] else 1
+            return 0 if report['profile_ready'] else 1
         if args.status:
-            print(json.dumps({'settings': settings.model_dump(mode='json'),
+            print(json.dumps({'settings': settings.model_dump(mode='json'), 'conversation_memory':False,
                              'hardware': 'Não verificado; nenhum modelo foi carregado.'}, ensure_ascii=False, indent=2))
             return 0
         from .application import Application

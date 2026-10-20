@@ -83,12 +83,15 @@ class LLM:
                 self.offload_effective = {'layers':int(match[1]), 'total_layers':int(match[2])}
         self._callback = llama_cpp.llama_log_callback(log)
         llama_cpp.llama_log_set(self._callback,None)
+        self.offload_effective = None
+        self.load_log = []
         try:
             self.model = llama_cpp.Llama(model_path=str(directory / self.settings.model_filename),
                          chat_handler=chat_formatter_to_chat_completion_handler(formatter), **kwargs)
-        except (ValueError, RuntimeError) as error:
+        except (ValueError, RuntimeError, MemoryError) as error:
+            self.unload()
             detail = ''.join(self.load_log[-6:])
-            raise RuntimeError('Falha ao carregar Phi-4-mini. Verifique versão do runtime, cache, VRAM/offload ou perfil CPU. '+str(error)+' '+detail) from error
+            raise RuntimeError(f'Falha ao carregar Phi-4-mini em {self.settings.llm_backend}. Verifique cache, contexto/VRAM ou selecione --profile cpu. '+str(error)+' '+detail) from error
         # Explicit official formatter overrides inconsistent GGUF metadata.
         self.template_metadata = self.model.metadata.get('tokenizer.chat_template')
         markers = ['<|system|>','<|user|>','<|assistant|>','<|end|>']
@@ -98,15 +101,15 @@ class LLM:
             raise RuntimeError('GGUF incompatível com os tokens oficiais do Phi-4-mini.')
         if self.settings.llm_backend == 'cpu':
             self.offload_effective = {'layers':0, 'total_layers':None}
-        elif self.offload_effective and self.offload_effective['layers'] == 0:
+        elif not self.offload_effective or self.offload_effective['layers'] == 0:
             self.unload()
-            raise RuntimeError('CUDA configurado mas nenhuma camada foi offloaded. Escolha CPU explicitamente.')
+            raise RuntimeError('CUDA configurado mas o offload de camadas não foi confirmado. Escolha --profile cpu explicitamente.')
         return self.model
 
     def unload(self):
         if self.model is not None:
-            self.model.close()
-            self.model = None
+            model,self.model = self.model,None
+            model.close()
 
     def tokens(self, text):
         return len(self.load().tokenize(text.encode('utf-8'), add_bos=False, special=True))

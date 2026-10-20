@@ -11,8 +11,8 @@ def test_stream_clear_and_sources(tmp_path):
     commands = iter(['question','/sources','/clear','/exit'])
     output = StringIO()
     chat(app,lambda _:next(commands),Console(file=output,width=100))
-    assert 'Resposta' in output.getvalue() and 'Memória limpa' in output.getvalue()
-    assert pipeline.memory.last_message is None
+    assert 'Resposta' in output.getvalue() and 'Último resultado limpo' in output.getvalue()
+    assert pipeline.last_result.text == ''
 
 
 def test_empty_base_does_not_load_model():
