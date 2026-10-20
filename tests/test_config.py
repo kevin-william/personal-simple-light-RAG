@@ -59,6 +59,7 @@ def test_saved_profiles_keep_cpu_but_do_not_force_legacy_gpu_embeddings(tmp_path
     from src.cli import main
     (tmp_path/'rag-profile.txt').write_text(saved,encoding='utf-8')
     monkeypatch.setattr(sys,'prefix',str(tmp_path))
+    monkeypatch.setattr('src.cli.load_settings', lambda p, **kw: load_settings(p, _env_file=None, **kw))
     assert main(['--status'])==0
     report=json.loads(capsys.readouterr().out)
     assert report['settings']['llm_backend']==expected

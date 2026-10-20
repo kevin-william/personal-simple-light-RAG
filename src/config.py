@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 from hashlib import sha256
 import json
 
@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     model_revision: str = '78eb92a46fc37e6b524df991ed9aca9bc6aa7b80'
     embedding_model_name: str = 'BAAI/bge-m3'
     embedding_model_revision: str = '5617a9f61b028005a4858fdac845db406aefb181'
+    embedding_dimension: int = Field(1024, gt=0)
     models_dir: Path = Path('models')
     chroma_persist_dir: Path = Path('data/chroma')
     collection_name: str = 'documents'
@@ -24,6 +25,7 @@ class Settings(BaseSettings):
     embedding_device: Literal['cuda', 'cpu'] = 'cpu'
     n_gpu_layers: int = Field(-1, ge=-1)
     llm_batch_size: int = Field(128, gt=0)
+    llm_threads: Optional[int] = Field(None, gt=0)
     context_size: int = Field(4096, ge=512)
     max_response_tokens: int = Field(512, gt=0)
     chunk_size_chars: int = Field(800, gt=0)
@@ -58,7 +60,7 @@ class Settings(BaseSettings):
         values = {key: getattr(self, key) for key in (
             'embedding_model_name', 'embedding_model_revision', 'embedding_max_tokens',
             'chunk_size_chars', 'chunk_overlap_chars')}
-        values.update(normalization='L2', text_processing='unicode-NFC-newlines-v1', dimension=1024)
+        values.update(normalization='L2', text_processing='unicode-NFC-newlines-v1', dimension=self.embedding_dimension)
         return sha256(json.dumps(values, sort_keys=True).encode()).hexdigest()
 
 
