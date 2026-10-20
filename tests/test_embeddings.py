@@ -30,3 +30,10 @@ def test_reject_bad_vectors(tmp_path):
     embed = Embedder(Settings(root=tmp_path, _env_file=None), lambda:fake, 2)
     with pytest.raises(ValueError, match='normalizado'):
         embed.encode(['query'])
+
+
+def test_auto_detect_embedding_dimension(tmp_path):
+    fake = Encoder()
+    fake.get_sentence_embedding_dimension = lambda: 384
+    embed = Embedder(Settings(root=tmp_path, _env_file=None, embedding_dimension=1024), lambda:fake)
+    assert embed.dimension == 1024
